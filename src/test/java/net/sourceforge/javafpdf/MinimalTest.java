@@ -14,6 +14,7 @@ public class MinimalTest {
 		FPDF pdf = new JavaPDF();
 		pdf.addPage();
 		Set<FontStyle> set = new HashSet<FontStyle>();
+		set.add(FontStyle.BOLD);
 		pdf.setFont("Arial", set, 16);
 		pdf.Cell(40, 10, "Hello World!");
 		File temp = File.createTempFile("fpdf", ".pdf");
