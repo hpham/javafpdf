@@ -1,6 +1,7 @@
 node {
    def mvnHome
    stage('Preparation') { // for display purposes
+      echo "Preparation"
       // Get some code from a GitHub repository
       git 'https://github.com/hpham/javafpdf.git'
       // Get the Maven tool.
@@ -9,6 +10,7 @@ node {
       mvnHome = tool 'M3'
    }
    stage('Build') {
+      echo "Build"
       // Run the maven build
       if (isUnix()) {
          sh "'${mvnHome}/bin/mvn' -Dmaven.test.failure.ignore clean package"
@@ -17,6 +19,7 @@ node {
       }
    }
    stage('Results') {
+      echo "Junit"
       junit '**/target/surefire-reports/TEST-*.xml'
       archive 'target/*.jar'
    }
