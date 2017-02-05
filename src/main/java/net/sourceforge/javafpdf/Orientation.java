@@ -8,8 +8,8 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public enum Orientation {
-	/** Portrait. */
-	PORTRAIT,
-	/** Landscape. */
-	LANDSCAPE;
+    /** Portrait. */
+    PORTRAIT,
+    /** Landscape. */
+    LANDSCAPE;
 }

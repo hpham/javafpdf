@@ -29,207 +29,207 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public class LineStyle {
-	/**
-	 * Cap style.
-	 * 
-	 * @author Alan Plum
-	 * @since 5 Mar 2008
-	 * @version $Rev: 8 $
-	 */
-	public static enum Cap {
-		/** Butt. */
-		BUTT(0),
-		/** Round. */
-		ROUND(1),
-		/** Square. */
-		SQUARE(2);
+    /**
+     * Cap style.
+     * 
+     * @author Alan Plum
+     * @since 5 Mar 2008
+     * @version $Rev: 8 $
+     */
+    public static enum Cap {
+	/** Butt. */
+	BUTT(0),
+	/** Round. */
+	ROUND(1),
+	/** Square. */
+	SQUARE(2);
 
-		private final int	style;
+	private final int style;
 
-		private Cap(final int style) {
-			this.style = style;
-		}
-
-		/**
-		 * @see java.lang.Enum#toString()
-		 */
-		@Override
-		public String toString() {
-			return String.valueOf(this.style);
-		}
+	private Cap(final int style) {
+	    this.style = style;
 	}
 
 	/**
-	 * Join style.
-	 * 
-	 * @author Alan Plum
-	 * @since 5 Mar 2008
-	 * @version $Rev: 8 $
+	 * @see java.lang.Enum#toString()
 	 */
-	public static enum Join {
-		/** Miter. */
-		MITER(0),
-		/** Round. */
-		ROUND(1),
-		/** Bevel. */
-		BEVEL(2);
-
-		private final int	style;
-
-		private Join(final int style) {
-			this.style = style;
-		}
-
-		/**
-		 * @see java.lang.Enum#toString()
-		 */
-		@Override
-		public String toString() {
-			return String.valueOf(this.style);
-		}
+	@Override
+	public String toString() {
+	    return String.valueOf(this.style);
 	}
+    }
 
-	private Float			width;
+    /**
+     * Join style.
+     * 
+     * @author Alan Plum
+     * @since 5 Mar 2008
+     * @version $Rev: 8 $
+     */
+    public static enum Join {
+	/** Miter. */
+	MITER(0),
+	/** Round. */
+	ROUND(1),
+	/** Bevel. */
+	BEVEL(2);
 
-	private Cap				cap;
+	private final int style;
 
-	private Join	join;
-
-	private float[]			dashes;
-
-	private float			phase;
-
-	private Color			color;
-
-	/**
-	 * Constructor.
-	 */
-	public LineStyle() {
-		this.width = null;
-		this.cap = null;
-		this.join = null;
-		this.dashes = null;
-		this.phase = 0f;
-		this.color = null;
+	private Join(final int style) {
+	    this.style = style;
 	}
 
 	/**
-	 * Get the line width.
-	 * 
-	 * @return the line width
+	 * @see java.lang.Enum#toString()
 	 */
-	public Float getWidth() {
-		return this.width;
+	@Override
+	public String toString() {
+	    return String.valueOf(this.style);
 	}
+    }
 
-	/**
-	 * Set the line width.
-	 * 
-	 * @param width
-	 *            the line width to set
-	 */
-	public void setWidth(final Float width) {
-		this.width = width;
-	}
+    private Float width;
 
-	/**
-	 * Get the cap style.
-	 * 
-	 * @return the cap
-	 */
-	public Cap getCap() {
-		return this.cap;
-	}
+    private Cap cap;
 
-	/**
-	 * Set the cap style.
-	 * 
-	 * @param cap
-	 *            the cap style to set
-	 */
-	public void setCap(final Cap cap) {
-		this.cap = cap;
-	}
+    private Join join;
 
-	/**
-	 * Get the join style.
-	 * 
-	 * @return the join style
-	 */
-	public Join getJoin() {
-		return this.join;
-	}
+    private float[] dashes;
 
-	/**
-	 * Set the join style.
-	 * 
-	 * @param join
-	 *            the join style to set
-	 */
-	public void setJoin(final Join join) {
-		this.join = join;
-	}
+    private float phase;
 
-	/**
-	 * Get the dashes.
-	 * 
-	 * @return the dashes
-	 */
-	public float[] getDashes() {
-		return this.dashes;
-	}
+    private Color color;
 
-	/**
-	 * Set the dash pattern. The dash pattern is given as an array of length
-	 * values for the dashes and gaps. <br>
-	 * For example: <code>{1.0f}</code> represents <code>1.0f</code> long
-	 * dashes with <code>1.0f</code> long gaps;<br>
-	 * <code>{2.0f, 1.0f}</code> represents <code>2.0f</code> long dashes
-	 * with <code>1.0f</code> long gaps; etc.
-	 * 
-	 * @param dashes
-	 *            the dashes to set
-	 */
-	public void setDashes(final float[] dashes) {
-		this.dashes = dashes;
-	}
+    /**
+     * Constructor.
+     */
+    public LineStyle() {
+	this.width = null;
+	this.cap = null;
+	this.join = null;
+	this.dashes = null;
+	this.phase = 0f;
+	this.color = null;
+    }
 
-	/**
-	 * Get the dash phase.
-	 * 
-	 * @return the phase
-	 */
-	public float getPhase() {
-		return this.phase;
-	}
+    /**
+     * Get the line width.
+     * 
+     * @return the line width
+     */
+    public Float getWidth() {
+	return this.width;
+    }
 
-	/**
-	 * Set the dash phase. The phase value shifts the point at which the dash
-	 * pattern starts.
-	 * 
-	 * @param phase
-	 *            the phase to set
-	 */
-	public void setPhase(final float phase) {
-		this.phase = phase;
-	}
+    /**
+     * Set the line width.
+     * 
+     * @param width
+     *            the line width to set
+     */
+    public void setWidth(final Float width) {
+	this.width = width;
+    }
 
-	/**
-	 * Get the color.
-	 * 
-	 * @return the color
-	 */
-	public Color getColor() {
-		return this.color;
-	}
+    /**
+     * Get the cap style.
+     * 
+     * @return the cap
+     */
+    public Cap getCap() {
+	return this.cap;
+    }
 
-	/**
-	 * Set the color.
-	 * 
-	 * @param color
-	 *            the color to set
-	 */
-	public void setColor(final Color color) {
-		this.color = color;
-	}
+    /**
+     * Set the cap style.
+     * 
+     * @param cap
+     *            the cap style to set
+     */
+    public void setCap(final Cap cap) {
+	this.cap = cap;
+    }
+
+    /**
+     * Get the join style.
+     * 
+     * @return the join style
+     */
+    public Join getJoin() {
+	return this.join;
+    }
+
+    /**
+     * Set the join style.
+     * 
+     * @param join
+     *            the join style to set
+     */
+    public void setJoin(final Join join) {
+	this.join = join;
+    }
+
+    /**
+     * Get the dashes.
+     * 
+     * @return the dashes
+     */
+    public float[] getDashes() {
+	return this.dashes;
+    }
+
+    /**
+     * Set the dash pattern. The dash pattern is given as an array of length
+     * values for the dashes and gaps. <br>
+     * For example: <code>{1.0f}</code> represents <code>1.0f</code> long dashes
+     * with <code>1.0f</code> long gaps;<br>
+     * <code>{2.0f, 1.0f}</code> represents <code>2.0f</code> long dashes with
+     * <code>1.0f</code> long gaps; etc.
+     * 
+     * @param dashes
+     *            the dashes to set
+     */
+    public void setDashes(final float[] dashes) {
+	this.dashes = dashes;
+    }
+
+    /**
+     * Get the dash phase.
+     * 
+     * @return the phase
+     */
+    public float getPhase() {
+	return this.phase;
+    }
+
+    /**
+     * Set the dash phase. The phase value shifts the point at which the dash
+     * pattern starts.
+     * 
+     * @param phase
+     *            the phase to set
+     */
+    public void setPhase(final float phase) {
+	this.phase = phase;
+    }
+
+    /**
+     * Get the color.
+     * 
+     * @return the color
+     */
+    public Color getColor() {
+	return this.color;
+    }
+
+    /**
+     * Set the color.
+     * 
+     * @param color
+     *            the color to set
+     */
+    public void setColor(final Color color) {
+	this.color = color;
+    }
 }

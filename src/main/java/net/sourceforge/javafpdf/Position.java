@@ -29,10 +29,10 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public enum Position {
-	/** To the right of the last position. */
-	RIGHTOF,
-	/** Insert a line break. */
-	NEXTLINE,
-	/** Place the pointer below the last position. */
-	BELOW;
+    /** To the right of the last position. */
+    RIGHTOF,
+    /** Insert a line break. */
+    NEXTLINE,
+    /** Place the pointer below the last position. */
+    BELOW;
 }

@@ -29,8 +29,8 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public enum ScaleMode {
-	/** Character spacing. */
-	CHARSPACE,
-	/** Horizontal scaling. */
-	HORIZONTAL;
+    /** Character spacing. */
+    CHARSPACE,
+    /** Horizontal scaling. */
+    HORIZONTAL;
 }

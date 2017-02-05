@@ -68,7 +68,7 @@ public abstract class FPDF {
 
     protected static Charwidths getCharwidths(final String font) throws IOException {
 	if (charwidths.get(font) == null) {
-	    Charwidths font_charwidths = new Charwidths(font);
+	    final Charwidths font_charwidths = new Charwidths(font);
 	    charwidths.put(font, font_charwidths);
 	}
 	return charwidths.get(font);
@@ -237,7 +237,7 @@ public abstract class FPDF {
 
     static {
 	// Some SVN magic to find out the revision of this class
-	String rev = "$Rev: 18 $"; //$NON-NLS-1$
+	final String rev = "$Rev: 18 $"; //$NON-NLS-1$
 	revision = rev.substring(6, rev.length() - 2);
     }
 
@@ -379,7 +379,7 @@ public abstract class FPDF {
 	this.w = this.wPt / this.k;
 	this.h = this.hPt / this.k;
 	// Page margins (1 cm)
-	float margin = 28.35f / this.k;
+	final float margin = 28.35f / this.k;
 	this.setMargins(margin, margin);
 	// Interior cell margin (1 mm)
 	this.cMargin = margin / 10;
@@ -426,7 +426,7 @@ public abstract class FPDF {
 
     /** Underline text */
     protected String _dounderline(final float x, final float y, final String txt) {
-	float w = this.getStringWidth(txt) + this.ws * (txt.split(" ")).length; //$NON-NLS-1$
+	final float w = this.getStringWidth(txt) + this.ws * (txt.split(" ")).length; //$NON-NLS-1$
 	return String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re f", //$NON-NLS-1$
 		Float.valueOf(x * this.k),
 		Float.valueOf(this.h - (y - this.currentFont.getUp() / 1000 * this.fontSize) * this.k),
@@ -450,7 +450,7 @@ public abstract class FPDF {
 	this._out(">>"); //$NON-NLS-1$
 	this._out("endobj"); //$NON-NLS-1$
 	// Cross-ref
-	int o = this._length(this.buffer);
+	final int o = this._length(this.buffer);
 	this._out("xref"); //$NON-NLS-1$
 	this._out("0 " + (this.n + 1)); //$NON-NLS-1$
 	this._out("0000000000 65535 f "); //$NON-NLS-1$
@@ -491,16 +491,16 @@ public abstract class FPDF {
      *             if the stream can not be read.
      */
     protected char[] _fread(final InputStream f, final int length) throws IOException {
-	char[] chars = new char[length];
+	final char[] chars = new char[length];
 	for (int i = 0; i < length; i++) {
-	    int in = f.read();
+	    final int in = f.read();
 	    chars[i] = (char) in;
 	}
 	return chars;
     }
 
     protected byte[] _freadb(final InputStream f, final int length) throws IOException {
-	byte[] bytes = new byte[length];
+	final byte[] bytes = new byte[length];
 	f.read(bytes);
 	return bytes;
     }
@@ -536,9 +536,9 @@ public abstract class FPDF {
 	// We'll assume big-endian encoding here.
 	int a = 0;
 	for (int i = 0; i < 4; i++) {
-	    int shift = (4 - 1 - i) * 8;
-	    int in = f.read();
-	    byte b = (byte) in;
+	    final int shift = (4 - 1 - i) * 8;
+	    final int in = f.read();
+	    final byte b = (byte) in;
 	    a += (b & 0x000000FF) << shift;
 	}
 	return a;
@@ -553,7 +553,7 @@ public abstract class FPDF {
 
     protected int _length(final List<byte[]> buffer) {
 	int len = 0;
-	for (byte[] b : buffer) {
+	for (final byte[] b : buffer) {
 	    len += b.length;
 	}
 	return len;
@@ -574,7 +574,7 @@ public abstract class FPDF {
 	     */
 	    try {
 		this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes("ISO-8859-1")); //$NON-NLS-1$
-	    } catch (UnsupportedEncodingException e) {
+	    } catch (final UnsupportedEncodingException e) {
 		this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes());
 	    }
 	}
@@ -587,34 +587,34 @@ public abstract class FPDF {
 
     /** Extract info from a PNG file */
     protected Map<String, Object> _parsepng(final File file) throws IOException {
-	InputStream f = new FileInputStream(file);
+	final InputStream f = new FileInputStream(file);
 	try {
 	    // Check signature
-	    char[] sig = new char[] { 137, 'P', 'N', 'G', 13, 10, 26, 10 };
+	    final char[] sig = new char[] { 137, 'P', 'N', 'G', 13, 10, 26, 10 };
 	    for (int i = 0; i < sig.length; i++) {
-		int in = f.read();
-		char c = (char) in;
+		final int in = f.read();
+		final char c = (char) in;
 		if (c != sig[i]) {
 		    throw new IOException("Not a PNG file: " + file); //$NON-NLS-1$
 		}
 	    }
 	    this._fread(f, 4);
 	    // Read header chunk
-	    char[] chunk = new char[] { 'I', 'H', 'D', 'R' };
+	    final char[] chunk = new char[] { 'I', 'H', 'D', 'R' };
 	    for (int i = 0; i < chunk.length; i++) {
-		int in = f.read();
-		char c = (char) in;
+		final int in = f.read();
+		final char c = (char) in;
 		if (c != chunk[i]) {
 		    throw new IOException("Not a PNG file: " + file); //$NON-NLS-1$
 		}
 	    }
-	    int w = this._freadint(f);
-	    int h = this._freadint(f);
-	    int bpc = f.read();
+	    final int w = this._freadint(f);
+	    final int h = this._freadint(f);
+	    final int bpc = f.read();
 	    if (bpc > 8) {
 		throw new IOException("16-bit depth not supported: " + file); //$NON-NLS-1$
 	    }
-	    int ct = f.read();
+	    final int ct = f.read();
 	    String colspace;
 	    if (ct == 0) {
 		colspace = "DeviceGray"; //$NON-NLS-1$
@@ -635,33 +635,31 @@ public abstract class FPDF {
 		throw new IOException("Interlacing not supported: " + file); //$NON-NLS-1$
 	    }
 	    this._fread(f, 4);
-	    StringBuilder sb = new StringBuilder();
+	    final StringBuilder sb = new StringBuilder();
 	    sb.append("/DecodeParms <</Predictor 15 /Colors ") //$NON-NLS-1$
-		    .append(
-			    ct == 2 ? 3 : 1)
-		    .append(" /BitsPerComponent ").append(bpc) //$NON-NLS-1$
+		    .append(ct == 2 ? 3 : 1).append(" /BitsPerComponent ").append(bpc) //$NON-NLS-1$
 		    .append(" /Columns ").append(w).append(">>"); //$NON-NLS-1$//$NON-NLS-2$
-	    String parms = sb.toString();
+	    final String parms = sb.toString();
 	    // Scan chunks looking for palette, transparency and image data
 	    byte[] pal = null;
 	    byte[] trns = null;
 	    byte[] data = null;
 	    do {
-		int n = this._freadint(f);
-		String type = new String(this._fread(f, 4));
+		final int n = this._freadint(f);
+		final String type = new String(this._fread(f, 4));
 		if (type.equals("PLTE")) { //$NON-NLS-1$
 		    // Read palette
 		    pal = this._freadb(f, n);
 		    this._fread(f, 4);
 		} else if (type.equals("tRNS")) { //$NON-NLS-1$
 		    // Read transparency info
-		    byte[] t = this._freadb(f, n);
+		    final byte[] t = this._freadb(f, n);
 		    if (ct == 0) {
 			trns = new byte[] { t[1] };
 		    } else if (ct == 2) {
 			trns = new byte[] { t[1], t[3], t[5] };
 		    } else {
-			int pos = new String(t).indexOf(0);
+			final int pos = new String(t).indexOf(0);
 			if (pos != -1) {
 			    trns = new byte[] { (byte) pos };
 			}
@@ -680,7 +678,7 @@ public abstract class FPDF {
 	    if (colspace.equals("Indexed") && (pal == null)) { //$NON-NLS-1$
 		throw new IOException("Missing palette in " + file); //$NON-NLS-1$
 	    }
-	    Map<String, Object> image = new HashMap<String, Object>();
+	    final Map<String, Object> image = new HashMap<String, Object>();
 	    image.put("w", Integer.valueOf(w)); //$NON-NLS-1$
 	    image.put("h", Integer.valueOf(h)); //$NON-NLS-1$
 	    image.put("cs", colspace); //$NON-NLS-1$
@@ -720,12 +718,12 @@ public abstract class FPDF {
     }
 
     protected void _putfonts() {
-	for (String k : this.fonts.keySet()) {
-	    Font font = this.fonts.get(k);
+	for (final String k : this.fonts.keySet()) {
+	    final Font font = this.fonts.get(k);
 	    // Font objects
 	    this.fonts.get(k).setN(this.n + 1);
-	    Font.Type type = font.getType();
-	    String name = font.getName();
+	    final Font.Type type = font.getType();
+	    final String name = font.getName();
 	    if (type == Font.Type.CORE) {
 		// Standard font
 		this._newobj();
@@ -748,9 +746,9 @@ public abstract class FPDF {
     }
 
     protected void _putimages() {
-	String filter = (this.compress) ? "/Filter /FlateDecode " : ""; //$NON-NLS-1$//$NON-NLS-2$
+	final String filter = (this.compress) ? "/Filter /FlateDecode " : ""; //$NON-NLS-1$//$NON-NLS-2$
 	// while(list(file,info)=each(this.images))
-	for (String file : this.images.keySet()) {
+	for (final String file : this.images.keySet()) {
 	    this._newobj();
 	    this.images.get(file).put("n", Integer.valueOf(this.n)); //$NON-NLS-1$
 	    this._out("<</Type /XObject"); //$NON-NLS-1$
@@ -776,8 +774,8 @@ public abstract class FPDF {
 		this._out((String) this.images.get(file).get("parms"));
 	    }
 	    if (this.images.get(file).get("trns") != null) {
-		byte[] trnsarr = ((byte[]) this.images.get(file).get("trns"));
-		StringBuilder trns = new StringBuilder();
+		final byte[] trnsarr = ((byte[]) this.images.get(file).get("trns"));
+		final StringBuilder trns = new StringBuilder();
 		trns.append("/Mask [ "); //$NON-NLS-1$
 		for (int i = 0; i < trnsarr.length; i++) {
 		    trns.append(_stringify(trnsarr));
@@ -788,7 +786,7 @@ public abstract class FPDF {
 	    this._out("/Length " + ((byte[]) (this.images.get(file).get("data"))).length + ">>");
 	    try {
 		this._putstream(new String((byte[]) this.images.get(file).get("data"), "ISO-8859-1")); //$NON-NLS-1$ //$NON-NLS-2$
-	    } catch (UnsupportedEncodingException e) {
+	    } catch (final UnsupportedEncodingException e) {
 		this._putstream(new String((byte[]) this.images.get(file).get("data"))); //$NON-NLS-1$
 	    }
 	    this.images.get(file).put("data", null);
@@ -797,11 +795,11 @@ public abstract class FPDF {
 	    if (this.images.get(file).get("cs") == "Indexed") {
 		this._newobj();
 		// pal=(this.compress) ? gzcompress(info["pal"]) : info["pal"];
-		byte[] pal = (byte[]) this.images.get(file).get("pal");
+		final byte[] pal = (byte[]) this.images.get(file).get("pal");
 		this._out("<<" + filter + "/Length " + pal.length + ">>");
 		try {
 		    this._putstream(new String(pal, "ISO-8859-1")); //$NON-NLS-1$ //$NON-NLS-2$
-		} catch (UnsupportedEncodingException e) {
+		} catch (final UnsupportedEncodingException e) {
 		    this._putstream(new String(pal)); // $NON-NLS-1$
 		}
 		this._out("endobj");
@@ -828,8 +826,8 @@ public abstract class FPDF {
 	if (this.creator != null) {
 	    this._out("/Creator " + this._textstring(this.creator)); //$NON-NLS-1$
 	}
-	Calendar cal = Calendar.getInstance();
-	StringBuilder sb = new StringBuilder();
+	final Calendar cal = Calendar.getInstance();
+	final StringBuilder sb = new StringBuilder();
 	sb.append("/CreationDate (D:"); //$NON-NLS-1$
 	sb.append(cal.get(Calendar.YEAR));
 	if (cal.get(Calendar.MONTH) < 9) {
@@ -858,7 +856,7 @@ public abstract class FPDF {
     }
 
     protected static String _stringify(final byte[] bytes) {
-	StringBuilder sb = new StringBuilder();
+	final StringBuilder sb = new StringBuilder();
 	for (int i = 0; i < bytes.length; i++) {
 	    sb.append(256 + bytes[i]);
 	    sb.append(' ');
@@ -870,12 +868,12 @@ public abstract class FPDF {
 
     protected static String _stringify(final List<byte[]> buffer) {
 	int length = 0;
-	for (byte[] b : buffer) {
+	for (final byte[] b : buffer) {
 	    length += b.length;
 	}
-	byte[] bytes = new byte[length];
+	final byte[] bytes = new byte[length];
 	int offset = 0;
-	for (byte[] b : buffer) {
+	for (final byte[] b : buffer) {
 	    for (int i = 0; i < b.length; i++) {
 		bytes[offset + i] = b[i];
 	    }
@@ -885,12 +883,12 @@ public abstract class FPDF {
     }
 
     protected void _putpages() {
-	int nb = this.page;
+	final int nb = this.page;
 	if (this.aliasNbPages != null) {
 	    // Replace number of pages
 	    for (int n = 1; n <= nb; n++) {
-		List<byte[]> bytes = this.pages.get(Integer.valueOf(n));
-		String s = _stringify(bytes).replace(this.aliasNbPages, String.valueOf(nb));
+		final List<byte[]> bytes = this.pages.get(Integer.valueOf(n));
+		final String s = _stringify(bytes).replace(this.aliasNbPages, String.valueOf(nb));
 		bytes.clear();
 		bytes.add(s.getBytes());
 		this.pages.put(Integer.valueOf(n), bytes);
@@ -903,7 +901,7 @@ public abstract class FPDF {
 	    this.wPt = this.fhPt;
 	    this.hPt = this.fwPt;
 	}
-	String filter = (this.compress) ? "/Filter /FlateDecode " //$NON-NLS-1$
+	final String filter = (this.compress) ? "/Filter /FlateDecode " //$NON-NLS-1$
 		: ""; //$NON-NLS-1$
 	for (int n = 1; n <= nb; n++) {
 	    // Page
@@ -918,9 +916,9 @@ public abstract class FPDF {
 	    this._out("/Resources 2 0 R"); //$NON-NLS-1$
 	    if (this.pageLinks.containsKey(Integer.valueOf(n))) {
 		// Links
-		StringBuilder annots = new StringBuilder();
+		final StringBuilder annots = new StringBuilder();
 		annots.append("/Annots ["); //$NON-NLS-1$
-		for (Map<Integer, Object> pl : this.pageLinks.values()) {
+		for (final Map<Integer, Object> pl : this.pageLinks.values()) {
 		    annots.append("<</Type /Annot /Subtype /Link /Rect ["); //$NON-NLS-1$
 		    annots.append(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f", //$NON-NLS-1$
 			    pl.get(Integer.valueOf(0)), pl.get(Integer.valueOf(1)),
@@ -934,8 +932,8 @@ public abstract class FPDF {
 			annots.append(this._textstring((String) pl.get(4)));
 			annots.append(">>>>"); //$NON-NLS-1$
 		    } else {
-			Map<Integer, Float> l = this.links.get(pl.get(4));
-			float h = (this.orientationChanges.get(l.get(0))) ? this.wPt : this.hPt;
+			final Map<Integer, Float> l = this.links.get(pl.get(4));
+			final float h = (this.orientationChanges.get(l.get(0))) ? this.wPt : this.hPt;
 			annots.append(String.format(Locale.ENGLISH, "/Dest [%d 0 R /XYZ 0 %.2f null]>>", //$NON-NLS-1$
 				Float.valueOf(1 + 2 * l.get(0)), Float.valueOf(h - l.get(1) * this.k)));
 		    }
@@ -950,7 +948,7 @@ public abstract class FPDF {
 	    // FIXME implement gz compression
 	    // String p = (this.compress) ? gzcompress(this.pages.get(n))
 	    // : this.pages.get(n);
-	    String p = _stringify(this.pages.get(n));
+	    final String p = _stringify(this.pages.get(n));
 	    this._newobj();
 	    this._out("<<" + filter + "/Length " //$NON-NLS-1$//$NON-NLS-2$
 		    + p.length() + ">>"); //$NON-NLS-1$
@@ -961,7 +959,7 @@ public abstract class FPDF {
 	this.offsets.put(1, this._length(this.buffer));
 	this._out("1 0 obj"); //$NON-NLS-1$
 	this._out("<</Type /Pages"); //$NON-NLS-1$
-	StringBuilder kids = new StringBuilder();
+	final StringBuilder kids = new StringBuilder();
 	kids.append("/Kids ["); //$NON-NLS-1$
 	for (int i = 0; i < nb; i++) {
 	    kids.append(3 + 2 * i);
@@ -979,8 +977,8 @@ public abstract class FPDF {
     protected void _putresourcedict() {
 	this._out("/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]"); //$NON-NLS-1$
 	this._out("/Font <<"); //$NON-NLS-1$
-	StringBuilder s = new StringBuilder();
-	for (Font font : this.fonts.values()) {
+	final StringBuilder s = new StringBuilder();
+	for (final Font font : this.fonts.values()) {
 	    s.append("/F"); //$NON-NLS-1$
 	    s.append(font.getI());
 	    s.append(' ');
@@ -1020,8 +1018,8 @@ public abstract class FPDF {
     }
 
     protected void _putxobjectdict() {
-	StringBuilder s = new StringBuilder();
-	for (Map<String, Object> image : this.images.values()) {
+	final StringBuilder s = new StringBuilder();
+	for (final Map<String, Object> image : this.images.values()) {
 	    s.append("/I"); //$NON-NLS-1$
 	    s.append(image.get("i")); //$NON-NLS-1$
 	    s.append(' ');
@@ -1051,8 +1049,8 @@ public abstract class FPDF {
      * @return the link's identifier.
      */
     public int addLink() {
-	int n = this.links.size() + 1;
-	Map<Integer, Float> map = new HashMap<Integer, Float>();
+	final int n = this.links.size() + 1;
+	final Map<Integer, Float> map = new HashMap<Integer, Float>();
 	map.put(Integer.valueOf(0), Float.valueOf(0));
 	this.links.put(Integer.valueOf(n), map);
 	return n;
@@ -1080,15 +1078,15 @@ public abstract class FPDF {
 	if (this.state == 0) {
 	    this.open();
 	}
-	String family = this.fontFamily;
-	StringBuilder sb = new StringBuilder();
-	Set<FontStyle> style = this.fontStyle;
-	float size = this.fontSizePt;
-	float lw = this.lineWidth;
-	String dc = this.drawColor;
-	String fc = this.fillColor;
-	String tc = this.textColor;
-	boolean cf = this.colorFlag;
+	final String family = this.fontFamily;
+	final StringBuilder sb = new StringBuilder();
+	final Set<FontStyle> style = this.fontStyle;
+	final float size = this.fontSizePt;
+	final float lw = this.lineWidth;
+	final String dc = this.drawColor;
+	final String fc = this.fillColor;
+	final String tc = this.textColor;
+	final boolean cf = this.colorFlag;
 	if (this.page > 0) {
 	    // Page footer
 	    this.inFooter = true;
@@ -1294,15 +1292,15 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void Cell(final float w, float h, final String txt, final Borders border, final Position ln,
+    public void Cell(final float w, final float h, final String txt, final Borders border, final Position ln,
 	    final Alignment align, final boolean fill, final int link) throws IOException {
-	float k = this.k;
+	final float k = this.k;
 	float x;
 	float y;
 	if ((this.y + h > this.pageBreakTrigger) && !this.inFooter && this.acceptPageBreak()) {
 	    // Automatic page break
 	    x = this.x;
-	    float ws = this.ws;
+	    final float ws = this.ws;
 	    if (ws > 0) {
 		this.ws = 0;
 		this._out("0 Tw"); //$NON-NLS-1$
@@ -1315,8 +1313,8 @@ public abstract class FPDF {
 			Float.valueOf(ws * k)));
 	    }
 	}
-	float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
-	StringBuilder s = new StringBuilder();
+	final float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
+	final StringBuilder s = new StringBuilder();
 	if ((fill) || ((border != null) && border.getAll())) {
 	    char op;
 	    if (fill) {
@@ -1364,7 +1362,7 @@ public abstract class FPDF {
 	    if (this.colorFlag) {
 		s.append("q ").append(this.textColor).append(' '); //$NON-NLS-1$
 	    }
-	    String txt2 = txt.replace("\\", "\\\\") //$NON-NLS-1$//$NON-NLS-2$
+	    final String txt2 = txt.replace("\\", "\\\\") //$NON-NLS-1$//$NON-NLS-2$
 		    .replace("(", "\\(") //$NON-NLS-1$//$NON-NLS-2$
 		    .replace(")", "\\)"); //$NON-NLS-1$//$NON-NLS-2$
 	    s.append(String.format(Locale.ENGLISH, "BT %.2f %.2f Td (%s) Tj ET", //$NON-NLS-1$
@@ -1427,20 +1425,20 @@ public abstract class FPDF {
 	    final Alignment align, final boolean fill, final int link, final ScaleMode scale, final boolean force)
 	    throws IOException {
 	// Get string width
-	float str_width = this.getStringWidth(txt);
+	final float str_width = this.getStringWidth(txt);
 
 	// Calculate ratio to fit cell
-	float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
-	float ratio = (w1 - this.cMargin * 2) / str_width;
+	final float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
+	final float ratio = (w1 - this.cMargin * 2) / str_width;
 
-	boolean fit = ((ratio < 1) || ((ratio > 1) && force));
+	final boolean fit = ((ratio < 1) || ((ratio > 1) && force));
 	if (fit) {
 	    switch (scale) {
 
 	    // Character spacing
 	    case CHARSPACE:
 		// Calculate character spacing in points
-		float char_space = (w1 - this.cMargin * 2 - str_width) / Math.max(txt.length() - 1, 1) * this.k;
+		final float char_space = (w1 - this.cMargin * 2 - str_width) / Math.max(txt.length() - 1, 1) * this.k;
 		// Set character spacing
 		this._out(String.format(Locale.ENGLISH, "BT %.2f Tc ET", Float //$NON-NLS-1$
 			.valueOf(char_space)));
@@ -1449,7 +1447,7 @@ public abstract class FPDF {
 	    // Horizontal scaling
 	    case HORIZONTAL:
 		// Calculate horizontal scaling
-		float horiz_scale = ratio * 100.0f;
+		final float horiz_scale = ratio * 100.0f;
 		// Set horizontal scaling
 		this._out(String.format(Locale.ENGLISH, "BT %.2f Tz ET", Float //$NON-NLS-1$
 			.valueOf(horiz_scale)));
@@ -1466,8 +1464,7 @@ public abstract class FPDF {
 	// Reset character spacing/horizontal scaling
 	if (fit) {
 	    this._out("BT " //$NON-NLS-1$
-		    + (ScaleMode.CHARSPACE.equals(scale)
-			    ? "0 Tc"//$NON-NLS-1$
+		    + (ScaleMode.CHARSPACE.equals(scale) ? "0 Tc"//$NON-NLS-1$
 			    : "100 Tz") //$NON-NLS-1$
 		    + " ET");//$NON-NLS-1$
 
@@ -1695,7 +1692,7 @@ public abstract class FPDF {
      */
     public float getStringWidth(final String s) {
 	float w = 0f;
-	float l = s.length();
+	final float l = s.length();
 	for (int i = 0; i < l; i++) {
 	    w += this.currentFont.getCw().get(s.charAt(i));
 	}
@@ -1750,7 +1747,7 @@ public abstract class FPDF {
 	    // First use of image, get info
 	    ImageType type1;
 	    if (type == null) {
-		int pos = file.indexOf('.');
+		final int pos = file.indexOf('.');
 		if (pos == -1) {
 		    throw new IOException("Image file has no extension and no type was specified: " //$NON-NLS-1$
 			    + file);
@@ -1801,7 +1798,7 @@ public abstract class FPDF {
      */
     public void setLineStyle(final LineStyle style) {
 	if (style.getWidth() != null) {
-	    float width_prev = this.lineWidth;
+	    final float width_prev = this.lineWidth;
 	    this.setLineWidth(style.getWidth().floatValue());
 	    this.lineWidth = width_prev;
 	}
@@ -1812,8 +1809,8 @@ public abstract class FPDF {
 	    this._out(style.getJoin().toString() + " j"); //$NON-NLS-1$
 	}
 	if (style.getDashes() != null) {
-	    StringBuilder sb = new StringBuilder();
-	    for (float dash : style.getDashes()) {
+	    final StringBuilder sb = new StringBuilder();
+	    for (final float dash : style.getDashes()) {
 		if (sb.length() > 0) {
 		    sb.append(' ');
 		}
@@ -1843,7 +1840,7 @@ public abstract class FPDF {
 
     /** Put a link on the page */
     public void Link(final float x, final float y, final float w, final float h, final int link) {
-	Map<Integer, Object> map = new HashMap<Integer, Object>();
+	final Map<Integer, Object> map = new HashMap<Integer, Object>();
 	map.put(Integer.valueOf(0), Float.valueOf(x * this.k));
 	map.put(Integer.valueOf(1), Float.valueOf(this.hPt - y * this.k));
 	map.put(Integer.valueOf(2), Float.valueOf(w * this.k));
@@ -1886,10 +1883,10 @@ public abstract class FPDF {
      */
     public void MultiCell(final float w, final float h, final String txt, final Borders border, final Alignment align,
 	    final boolean fill) throws IOException {
-	float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
-	Charwidths cw = this.currentFont.getCw();
-	float wmax = (w1 - 2 * this.cMargin) * 1000 / this.fontSize;
-	String s = (txt == null) ? "" : txt.replace("\r", ""); //$NON-NLS-1$//$NON-NLS-2$
+	final float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
+	final Charwidths cw = this.currentFont.getCw();
+	final float wmax = (w1 - 2 * this.cMargin) * 1000 / this.fontSize;
+	final String s = (txt == null) ? "" : txt.replace("\r", ""); //$NON-NLS-1$//$NON-NLS-2$
 	int nb = s.length();
 	if ((nb > 0) && (s.charAt(nb - 1) == '\n')) {
 	    nb--;
@@ -1914,7 +1911,7 @@ public abstract class FPDF {
 	int nl = 1;
 	while (i < nb) {
 	    // Get next character
-	    char c = s.charAt(i);
+	    final char c = s.charAt(i);
 	    if (c == '\n') {
 		// Explicit line break
 		if (this.ws > 0) {
@@ -2008,8 +2005,8 @@ public abstract class FPDF {
 	if (this.state < 3) {
 	    this.close();
 	}
-	OutputStream out = new FileOutputStream(file);
-	for (byte[] bytes : this.buffer) {
+	final OutputStream out = new FileOutputStream(file);
+	for (final byte[] bytes : this.buffer) {
 	    out.write(bytes);
 	}
 	out.close();
@@ -2021,7 +2018,7 @@ public abstract class FPDF {
 	if (this.state < 3) {
 	    this.close();
 	}
-	for (byte[] bytes : this.buffer) {
+	for (final byte[] bytes : this.buffer) {
 	    out.write(bytes);
 	}
     }
@@ -2047,7 +2044,7 @@ public abstract class FPDF {
      * @param mode
      *            the drawing mode
      */
-    public void Rect(final Coordinate coords, final float w, float h, final DrawMode mode) {
+    public void Rect(final Coordinate coords, final float w, final float h, final DrawMode mode) {
 	if (mode != null) {
 	    this._out(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re %s", //$NON-NLS-1$
 		    Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - coords.getY()) * this.k),
@@ -2135,15 +2132,15 @@ public abstract class FPDF {
 	    if (segs < 2) {
 		segs = 2;
 	    }
-	    double aStartR = Math.toRadians(aStart);
-	    double aFinishR = Math.toRadians(aFinish);
-	    double aTotal = aFinishR - aStartR;
-	    double dt = aTotal / segs;
-	    double dtm = dt / 3;
+	    final double aStartR = Math.toRadians(aStart);
+	    final double aFinishR = Math.toRadians(aFinish);
+	    final double aTotal = aFinishR - aStartR;
+	    final double dt = aTotal / segs;
+	    final double dtm = dt / 3;
 	    x0 = x0 * this.k;
 	    y0 = (this.h - y0) * this.k;
 	    if (angle != 0) {
-		double a = -Math.toRadians(angle);
+		final double a = -Math.toRadians(angle);
 		this._out(String.format(Locale.ENGLISH, "q %.2f %.2f %.2f %.2f %.2f %.2f cm", //$NON-NLS-1$
 			Math.cos(a), -1 * Math.sin(a), Math.sin(a), Math.cos(a), x0, y0));
 		x0 = 0;
@@ -2249,11 +2246,11 @@ public abstract class FPDF {
      */
     public void RegularPolygon(final Coordinate coords, final float r, final int sides, final double angle,
 	    final DrawMode mode) {
-	int sides1 = (sides < 3) ? 3 : sides;
-	Coordinate[] p = new Coordinate[sides1];
+	final int sides1 = (sides < 3) ? 3 : sides;
+	final Coordinate[] p = new Coordinate[sides1];
 	for (int i = 0; i < sides1; i++) {
-	    double a = angle + (i * 360 / sides);
-	    double a_rad = Math.toRadians(a);
+	    final double a = angle + (i * 360 / sides);
+	    final double a_rad = Math.toRadians(a);
 	    p[i] = new Coordinate(coords.getX() + (r * Math.sin(a_rad)), coords.getY() + (r * Math.cos(a_rad)));
 	}
 	this.Polygon(p, mode);
@@ -2277,16 +2274,16 @@ public abstract class FPDF {
      */
     public void StarPolygon(final Coordinate coords, final float r, final int vertices, final int gaps,
 	    final double angle, final DrawMode mode) {
-	int nv = (vertices < 2) ? 2 : vertices;
-	Coordinate[] p2 = new Coordinate[nv];
-	boolean[] visited = new boolean[nv];
+	final int nv = (vertices < 2) ? 2 : vertices;
+	final Coordinate[] p2 = new Coordinate[nv];
+	final boolean[] visited = new boolean[nv];
 	for (int i = 0; i < nv; i++) {
-	    double a = angle + (i * 360 / nv);
-	    double a_rad = Math.toRadians(a);
+	    final double a = angle + (i * 360 / nv);
+	    final double a_rad = Math.toRadians(a);
 	    p2[i] = new Coordinate(coords.getX() + (r * Math.sin(a_rad)), coords.getY() + (r * Math.cos(a_rad)));
 	    visited[i] = false;
 	}
-	Coordinate[] p = new Coordinate[nv];
+	final Coordinate[] p = new Coordinate[nv];
 	int i = 0;
 	do {
 	    p[i] = p2[i];
@@ -2312,7 +2309,7 @@ public abstract class FPDF {
      */
     public void RoundedRect(final Coordinate coords, final float w, final float h, final float r, final DrawMode mode) {
 	if (mode != null) {
-	    double myArc = 4 / 3 * (Math.sqrt(2) - 1);
+	    final double myArc = 4 / 3 * (Math.sqrt(2) - 1);
 	    this._Point(new Coordinate(coords.getX() + r, coords.getY()));
 	    float xc = coords.getX() + w - r;
 	    float yc = coords.getY() + r;
@@ -2535,7 +2532,7 @@ public abstract class FPDF {
 	    return;
 	}
 	// Test if used for the first time
-	StringBuilder sb = new StringBuilder();
+	final StringBuilder sb = new StringBuilder();
 	sb.append(family);
 	if ((style != null) && style.contains(FontStyle.BOLD)) {
 	    sb.append(FontStyle.BOLD.getOp());
@@ -2543,12 +2540,13 @@ public abstract class FPDF {
 	if ((style != null) && style.contains(FontStyle.ITALIC)) {
 	    sb.append(FontStyle.ITALIC.getOp());
 	}
-	String fontkey = sb.toString();
+	final String fontkey = sb.toString();
 	if (this.fonts.get(fontkey) == null) {
 	    // Check if one of the standard fonts
 	    if (this.coreFonts.get(fontkey) != null) {
-		int i = this.fonts.size() + 1;
-		Font font = new Font(i, Font.Type.CORE, this.coreFonts.get(fontkey), -100, 50, getCharwidths(fontkey));
+		final int i = this.fonts.size() + 1;
+		final Font font = new Font(i, Font.Type.CORE, this.coreFonts.get(fontkey), -100, 50,
+			getCharwidths(fontkey));
 		this.fonts.put(fontkey, font);
 	    } else {
 		throw new IOException("Undefined font: " //$NON-NLS-1$
@@ -2614,7 +2612,7 @@ public abstract class FPDF {
 	if (page == -1) {
 	    page = this.page;
 	}
-	Map<Integer, Float> map = new HashMap<Integer, Float>();
+	final Map<Integer, Float> map = new HashMap<Integer, Float>();
 	map.put(Integer.valueOf(page), Float.valueOf(y));
 	this.links.put(Integer.valueOf(link), map);
     }
@@ -2695,7 +2693,7 @@ public abstract class FPDF {
 
     /** Output a string */
     public void Text(final float x, final float y, final String txt) {
-	StringBuilder s = new StringBuilder();
+	final StringBuilder s = new StringBuilder();
 	s.append(String.format(Locale.ENGLISH, "BT %.2f %.2f Td (%s) Tj ET", //$NON-NLS-1$
 		Float.valueOf(x * this.k), Float.valueOf((this.h - y) * this.k), this._escape(txt)));
 	if (this.underline && (txt != null)) {
@@ -2716,11 +2714,11 @@ public abstract class FPDF {
      *             if the default font can not be loaded.
      */
     public void write(final float h, final String txt, final int link) throws IOException {
-	Charwidths cw = this.currentFont.getCw(); // $NON-NLS-1$
+	final Charwidths cw = this.currentFont.getCw(); // $NON-NLS-1$
 	float w = this.w - this.rMargin - this.x;
 	float wmax = (w - 2 * this.cMargin) * 1000 / this.fontSize;
-	String s = txt.replace("\r", ""); //$NON-NLS-1$//$NON-NLS-2$
-	int nb = s.length();
+	final String s = txt.replace("\r", ""); //$NON-NLS-1$//$NON-NLS-2$
+	final int nb = s.length();
 	int sep = -1;
 	int i = 0;
 	int j = 0;
@@ -2728,7 +2726,7 @@ public abstract class FPDF {
 	int nl = 1;
 	while (i < nb) {
 	    // Get next character
-	    char c = s.charAt(i);
+	    final char c = s.charAt(i);
 	    if (c == '\n') {
 		// Explicit line break
 		this.Cell(w, h, s.substring(j, i), null, Position.BELOW, null, false, link);

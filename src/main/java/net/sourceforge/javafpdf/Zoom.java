@@ -8,12 +8,12 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public enum Zoom {
-	/** Full page zoom. */
-	FULLPAGE,
-	/** Full width zoom. */
-	FULLWIDTH,
-	/** Real zoom. */
-	REAL,
-	/** Default zoom. */
-	DEFAULT;
+    /** Full page zoom. */
+    FULLPAGE,
+    /** Full width zoom. */
+    FULLWIDTH,
+    /** Real zoom. */
+    REAL,
+    /** Default zoom. */
+    DEFAULT;
 }

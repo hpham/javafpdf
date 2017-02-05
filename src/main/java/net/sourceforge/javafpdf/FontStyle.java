@@ -29,24 +29,24 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public enum FontStyle {
-	/** Boldface. */
-	BOLD('B'),
-	/** Italized. */
-	ITALIC('I'),
-	/** Underlined. */
-	UNDERLINE('U');
-	private char	op;
+    /** Boldface. */
+    BOLD('B'),
+    /** Italized. */
+    ITALIC('I'),
+    /** Underlined. */
+    UNDERLINE('U');
+    private char op;
 
-	private FontStyle(final char op) {
-		this.op = op;
-	}
+    private FontStyle(final char op) {
+	this.op = op;
+    }
 
-	/**
-	 * Gets the opcode.
-	 * 
-	 * @return the opcode.
-	 */
-	public char getOp() {
-		return this.op;
-	}
+    /**
+     * Gets the opcode.
+     * 
+     * @return the opcode.
+     */
+    public char getOp() {
+	return this.op;
+    }
 }

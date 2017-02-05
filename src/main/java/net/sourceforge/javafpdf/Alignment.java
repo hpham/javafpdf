@@ -29,12 +29,12 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public enum Alignment {
-	/** Left alignment. */
-	LEFT,
-	/** Right alignment. */
-	RIGHT,
-	/** Center alignment. */
-	CENTER,
-	/** Justification / Default. */
-	JUSTIFIED;
+    /** Left alignment. */
+    LEFT,
+    /** Right alignment. */
+    RIGHT,
+    /** Center alignment. */
+    CENTER,
+    /** Justification / Default. */
+    JUSTIFIED;
 }

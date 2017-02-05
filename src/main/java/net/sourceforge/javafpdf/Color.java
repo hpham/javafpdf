@@ -29,83 +29,83 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public class Color {
-	private final int	r;
+    private final int r;
 
-	private final int	g;
+    private final int g;
 
-	private final int	b;
+    private final int b;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param r
-	 *            the red
-	 * @param g
-	 *            the green
-	 * @param b
-	 *            the blue
-	 */
-	public Color(final int r, final int g, final int b) {
-		this.r = r % 256;
-		this.g = g % 256;
-		this.b = b % 256;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param r
+     *            the red
+     * @param g
+     *            the green
+     * @param b
+     *            the blue
+     */
+    public Color(final int r, final int g, final int b) {
+	this.r = r % 256;
+	this.g = g % 256;
+	this.b = b % 256;
+    }
 
-	/**
-	 * Constructor. Creates a grayscale color.
-	 * 
-	 * @param v
-	 *            the value
-	 */
-	public Color(final int v) {
-		this.r = v % 256;
-		this.g = v % 256;
-		this.b = v % 256;
-	}
+    /**
+     * Constructor. Creates a grayscale color.
+     * 
+     * @param v
+     *            the value
+     */
+    public Color(final int v) {
+	this.r = v % 256;
+	this.g = v % 256;
+	this.b = v % 256;
+    }
 
-	/**
-	 * DOCME
-	 * 
-	 * @return the value
-	 */
-	public int getV() {
-		return (this.r + this.g + this.b) / 3;
-	}
+    /**
+     * DOCME
+     * 
+     * @return the value
+     */
+    public int getV() {
+	return (this.r + this.g + this.b) / 3;
+    }
 
-	/**
-	 * Checks whether the color is grayscale.
-	 * 
-	 * @return <code>true</code> if all three colors are identical;
-	 *         <code>false</code> otherwise.
-	 */
-	public boolean isGrayscale() {
-		return ((this.r == this.g) && (this.g == this.b));
-	}
+    /**
+     * Checks whether the color is grayscale.
+     * 
+     * @return <code>true</code> if all three colors are identical;
+     *         <code>false</code> otherwise.
+     */
+    public boolean isGrayscale() {
+	return ((this.r == this.g) && (this.g == this.b));
+    }
 
-	/**
-	 * DOCME
-	 * 
-	 * @return the red
-	 */
-	public int getR() {
-		return this.r;
-	}
+    /**
+     * DOCME
+     * 
+     * @return the red
+     */
+    public int getR() {
+	return this.r;
+    }
 
-	/**
-	 * DOCME
-	 * 
-	 * @return the green
-	 */
-	public int getG() {
-		return this.g;
-	}
+    /**
+     * DOCME
+     * 
+     * @return the green
+     */
+    public int getG() {
+	return this.g;
+    }
 
-	/**
-	 * DOCME
-	 * 
-	 * @return the blue
-	 */
-	public int getB() {
-		return this.b;
-	}
+    /**
+     * DOCME
+     * 
+     * @return the blue
+     */
+    public int getB() {
+	return this.b;
+    }
 }

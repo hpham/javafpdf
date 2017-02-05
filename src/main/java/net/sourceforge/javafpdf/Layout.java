@@ -8,12 +8,12 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public enum Layout {
-	/** Single page layout. */
-	SINGLE,
-	/** Continuous layout. */
-	CONTINUOUS,
-	/** Two pages layout. */
-	TWO,
-	/** Default layout. */
-	DEFAULT;
+    /** Single page layout. */
+    SINGLE,
+    /** Continuous layout. */
+    CONTINUOUS,
+    /** Two pages layout. */
+    TWO,
+    /** Default layout. */
+    DEFAULT;
 }

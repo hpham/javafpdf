@@ -29,51 +29,51 @@ package net.sourceforge.javafpdf;
  * @version $Rev: 8 $
  */
 public class Coordinate {
-	private final float	x;
+    private final float x;
 
-	private final float	y;
+    private final float y;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param x
-	 *            the x position
-	 * @param y
-	 *            the y position
-	 */
-	public Coordinate(final float x, final float y) {
-		this.x = x;
-		this.y = y;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param x
+     *            the x position
+     * @param y
+     *            the y position
+     */
+    public Coordinate(final float x, final float y) {
+	this.x = x;
+	this.y = y;
+    }
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param x
-	 *            the x position
-	 * @param y
-	 *            the y position
-	 */
-	public Coordinate(final double x, final double y) {
-		this.x = (float) x;
-		this.y = (float) y;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param x
+     *            the x position
+     * @param y
+     *            the y position
+     */
+    public Coordinate(final double x, final double y) {
+	this.x = (float) x;
+	this.y = (float) y;
+    }
 
-	/**
-	 * DOCME
-	 * 
-	 * @return the x
-	 */
-	public float getX() {
-		return this.x;
-	}
+    /**
+     * DOCME
+     * 
+     * @return the x
+     */
+    public float getX() {
+	return this.x;
+    }
 
-	/**
-	 * DOCME
-	 * 
-	 * @return the y
-	 */
-	public float getY() {
-		return this.y;
-	}
+    /**
+     * DOCME
+     * 
+     * @return the y
+     */
+    public float getY() {
+	return this.y;
+    }
 }
