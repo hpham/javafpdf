@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-public class JavaPDF extends FPDF {
+public class PDFTutorial2 extends FPDF {
 
-    public JavaPDF() {
+    public PDFTutorial2() {
 	super();
     }
 
@@ -22,16 +22,16 @@ public class JavaPDF extends FPDF {
 	try {
 	    Image("logo_pb.png", new Coordinate(10, 8), 10.0f, 8.0f, ImageType.PNG, 0);
 	    // Arial bold 15
-	    Set<FontStyle> set = new HashSet<FontStyle>();
+	    final Set<FontStyle> set = new HashSet<FontStyle>();
 	    set.add(FontStyle.BOLD);
 	    setFont("Arial", set, 15.0f);
 	    // Move to the right
 	    Cell(80.0f, 0f);
 	    // Title
-	    Cell(30.0f, 10.0f, "Title", Position.BELOW, Alignment.LEFT);
+	    Cell(30.0f, 10.0f, "Title", Position.NEXTLINE, Alignment.LEFT);
 	    // Line break
 	    Ln(20);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
