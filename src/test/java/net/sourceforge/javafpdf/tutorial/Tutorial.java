@@ -14,6 +14,7 @@ import net.sourceforge.javafpdf.FontStyle;
 import net.sourceforge.javafpdf.PDFTutorial1;
 import net.sourceforge.javafpdf.PDFTutorial2;
 import net.sourceforge.javafpdf.PDFTutorial3;
+import net.sourceforge.javafpdf.PDFTutorial4;
 import net.sourceforge.javafpdf.Position;
 
 public class Tutorial {
@@ -50,6 +51,20 @@ public class Tutorial {
     @Test
     public void test_tutor_3() throws IOException, URISyntaxException {
 	final PDFTutorial3 pdf = new PDFTutorial3();
+
+	pdf.setTitle("20000 Leagues Under the Seas");
+	pdf.setAuthor("Jules Verne");
+	pdf.printChapter(1, "A RUNAWAY REEF", "20k_c1.txt");
+	pdf.printChapter(2, "THE PROS AND CONS", "20k_c2.txt");
+	final File temp = File.createTempFile("fpdf", ".pdf");
+	pdf.output(temp);
+	System.out.println(temp.getAbsolutePath());
+    }
+
+    // FIXME fillColor do not work
+    @Test
+    public void test_tutor_4() throws IOException, URISyntaxException {
+	final PDFTutorial4 pdf = new PDFTutorial4();
 
 	pdf.setTitle("20000 Leagues Under the Seas");
 	pdf.setAuthor("Jules Verne");
