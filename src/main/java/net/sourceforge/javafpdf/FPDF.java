@@ -428,9 +428,8 @@ public abstract class FPDF {
     protected String _dounderline(final float x, final float y, final String txt) {
 	final float w = this.getStringWidth(txt) + this.ws * (txt.split(" ")).length; //$NON-NLS-1$
 	return String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re f", //$NON-NLS-1$
-		Float.valueOf(x * this.k),
-		Float.valueOf(this.h - (y - this.currentFont.getUp() / 1000 * this.fontSize) * this.k),
-		Float.valueOf(w * this.k), Float.valueOf(-this.currentFont.getUt() / 1000 * this.fontSizePt));
+		Float.valueOf(x * this.k), Float.valueOf(this.h - (y - this.currentFont.getUp() / 1000 * this.fontSize) * this.k), Float.valueOf(w * this.k),
+		Float.valueOf(-this.currentFont.getUt() / 1000 * this.fontSizePt));
     }
 
     protected void _enddoc() {
@@ -758,8 +757,7 @@ public abstract class FPDF {
 	    this._out("/Height " //$NON-NLS-1$
 		    + this.images.get(file).get("h")); //$NON-NLS-1$
 	    if (this.images.get(file).get("cs") == "Indexed") {
-		this._out("/ColorSpace [/Indexed /DeviceRGB "
-			+ (((byte[]) this.images.get(file).get("pal")).length / 3 - 1) + " " + (this.n + 1) + " 0 R]");
+		this._out("/ColorSpace [/Indexed /DeviceRGB " + (((byte[]) this.images.get(file).get("pal")).length / 3 - 1) + " " + (this.n + 1) + " 0 R]");
 	    } else {
 		this._out("/ColorSpace /" + this.images.get(file).get("cs"));
 		if (this.images.get(file).get("cs") == "DeviceCMYK") {
@@ -908,8 +906,7 @@ public abstract class FPDF {
 	    this._newobj();
 	    this._out("<</Type /Page"); //$NON-NLS-1$
 	    this._out("/Parent 1 0 R"); //$NON-NLS-1$
-	    if ((this.orientationChanges.get(Integer.valueOf(n)) != null)
-		    && this.orientationChanges.get(Integer.valueOf(n)).booleanValue()) {
+	    if ((this.orientationChanges.get(Integer.valueOf(n)) != null) && this.orientationChanges.get(Integer.valueOf(n)).booleanValue()) {
 		this._out(String.format(Locale.ENGLISH, "/MediaBox [0 0 %.2f %.2f]", //$NON-NLS-1$
 			Float.valueOf(this.hPt), Float.valueOf(this.wPt)));
 	    }
@@ -922,10 +919,8 @@ public abstract class FPDF {
 		    annots.append("<</Type /Annot /Subtype /Link /Rect ["); //$NON-NLS-1$
 		    annots.append(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f", //$NON-NLS-1$
 			    pl.get(Integer.valueOf(0)), pl.get(Integer.valueOf(1)),
-			    Float.valueOf(((Float) pl.get(Integer.valueOf(0))).floatValue()
-				    + ((Float) pl.get(Integer.valueOf(2))).floatValue()),
-			    Float.valueOf(((Float) pl.get(Integer.valueOf(1))).floatValue()
-				    - ((Float) pl.get(Integer.valueOf(3))).floatValue())));
+			    Float.valueOf(((Float) pl.get(Integer.valueOf(0))).floatValue() + ((Float) pl.get(Integer.valueOf(2))).floatValue()),
+			    Float.valueOf(((Float) pl.get(Integer.valueOf(1))).floatValue() - ((Float) pl.get(Integer.valueOf(3))).floatValue())));
 		    annots.append("] /Border [0 0 0] "); //$NON-NLS-1$
 		    if (pl.get(4) instanceof String) {
 			annots.append("/A <</S /URI /URI "); //$NON-NLS-1$
@@ -1247,8 +1242,7 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void Cell(final float w, final float h, final String txt, final Position ln, final Alignment align)
-	    throws IOException {
+    public void Cell(final float w, final float h, final String txt, final Position ln, final Alignment align) throws IOException {
 	this.Cell(w, h, txt, null, ln, align, false, 0);
     }
 
@@ -1292,8 +1286,7 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void Cell(final float w, final float h, final String txt, final Borders border, final Position ln,
-	    final Alignment align, final boolean fill, final int link) throws IOException {
+    public void Cell(final float w, final float h, final String txt, final Borders border, final Position ln, final Alignment align, final boolean fill, final int link) throws IOException {
 	final float k = this.k;
 	float x;
 	float y;
@@ -1323,31 +1316,26 @@ public abstract class FPDF {
 		op = 'S';
 	    }
 	    s.append(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re %s ", //$NON-NLS-1$
-		    Float.valueOf(this.x * k), Float.valueOf((this.h - this.y) * k), Float.valueOf(w1 * k),
-		    Float.valueOf(-h * k), Float.valueOf(op)));
+		    Float.valueOf(this.x * k), Float.valueOf((this.h - this.y) * k), Float.valueOf(w1 * k), Float.valueOf(-h * k), Float.valueOf(op)));
 	}
 	if (border != null) {
 	    x = this.x;
 	    y = this.y;
 	    if (border.getLeft()) {
 		s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-			Float.valueOf(x * k), Float.valueOf((this.h - y) * k), Float.valueOf(x * k),
-			Float.valueOf((this.h - (y + h)) * k)));
+			Float.valueOf(x * k), Float.valueOf((this.h - y) * k), Float.valueOf(x * k), Float.valueOf((this.h - (y + h)) * k)));
 	    }
 	    if (border.getTop()) {
 		s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-			Float.valueOf(x * k), Float.valueOf((this.h - y) * k), Float.valueOf((x + w1) * k),
-			Float.valueOf((this.h - y) * k)));
+			Float.valueOf(x * k), Float.valueOf((this.h - y) * k), Float.valueOf((x + w1) * k), Float.valueOf((this.h - y) * k)));
 	    }
 	    if (border.getRight()) {
 		s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-			Float.valueOf((x + w1) * k), Float.valueOf((this.h - y) * k), Float.valueOf((x + w1) * k),
-			Float.valueOf((this.h - (y + h)) * k)));
+			Float.valueOf((x + w1) * k), Float.valueOf((this.h - y) * k), Float.valueOf((x + w1) * k), Float.valueOf((this.h - (y + h)) * k)));
 	    }
 	    if (border.getBottom()) {
 		s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-			Float.valueOf(x * k), Float.valueOf((this.h - (y + h)) * k), Float.valueOf((x + w1) * k),
-			Float.valueOf((this.h - (y + h)) * k)));
+			Float.valueOf(x * k), Float.valueOf((this.h - (y + h)) * k), Float.valueOf((x + w1) * k), Float.valueOf((this.h - (y + h)) * k)));
 	    }
 	}
 	if (txt != null) {
@@ -1366,8 +1354,7 @@ public abstract class FPDF {
 		    .replace("(", "\\(") //$NON-NLS-1$//$NON-NLS-2$
 		    .replace(")", "\\)"); //$NON-NLS-1$//$NON-NLS-2$
 	    s.append(String.format(Locale.ENGLISH, "BT %.2f %.2f Td (%s) Tj ET", //$NON-NLS-1$
-		    Float.valueOf((this.x + dx) * k),
-		    Float.valueOf((this.h - (this.y + .5f * h + .3f * this.fontSize)) * k), txt2));
+		    Float.valueOf((this.x + dx) * k), Float.valueOf((this.h - (this.y + .5f * h + .3f * this.fontSize)) * k), txt2));
 	    if (this.underline) {
 		s.append(' ');
 		s.append(this._dounderline(this.x + dx, this.y + .5f * h + .3f * this.fontSize, txt));
@@ -1376,8 +1363,7 @@ public abstract class FPDF {
 		s.append(" Q"); //$NON-NLS-1$
 	    }
 	    if (link > 0) {
-		this.Link(this.x + dx, this.y + .5f * h - .5f * this.fontSize, this.getStringWidth(txt), this.fontSize,
-			link);
+		this.Link(this.x + dx, this.y + .5f * h - .5f * this.fontSize, this.getStringWidth(txt), this.fontSize, link);
 	    }
 	}
 	if (s.length() > 0) {
@@ -1421,9 +1407,8 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void CellFit(final float w, final float h, final String txt, final Borders border, final Position ln,
-	    final Alignment align, final boolean fill, final int link, final ScaleMode scale, final boolean force)
-	    throws IOException {
+    public void CellFit(final float w, final float h, final String txt, final Borders border, final Position ln, final Alignment align, final boolean fill, final int link, final ScaleMode scale,
+	    final boolean force) throws IOException {
 	// Get string width
 	final float str_width = this.getStringWidth(txt);
 
@@ -1511,8 +1496,7 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void CellFitScale(final float w, final float h, final String txt, final Borders border, final Position ln,
-	    final Alignment align, final boolean fill, final int link) throws IOException {
+    public void CellFitScale(final float w, final float h, final String txt, final Borders border, final Position ln, final Alignment align, final boolean fill, final int link) throws IOException {
 	this.CellFit(w, h, txt, border, ln, align, fill, link, ScaleMode.HORIZONTAL, false);
     }
 
@@ -1530,8 +1514,7 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void CellFitScaleForce(final float w, final float h, final String txt, final Position ln)
-	    throws IOException {
+    public void CellFitScaleForce(final float w, final float h, final String txt, final Position ln) throws IOException {
 	this.CellFitScaleForce(w, h, txt, null, ln, null, false, 0);
     }
 
@@ -1557,8 +1540,8 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void CellFitScaleForce(final float w, final float h, final String txt, final Borders border,
-	    final Position ln, final Alignment align, final boolean fill, final int link) throws IOException {
+    public void CellFitScaleForce(final float w, final float h, final String txt, final Borders border, final Position ln, final Alignment align, final boolean fill, final int link)
+	    throws IOException {
 	this.CellFit(w, h, txt, border, ln, align, fill, link, ScaleMode.HORIZONTAL, true);
     }
 
@@ -1602,8 +1585,7 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void CellFitSpace(final float w, final float h, final String txt, final Borders border, final Position ln,
-	    final Alignment align, final boolean fill, final int link) throws IOException {
+    public void CellFitSpace(final float w, final float h, final String txt, final Borders border, final Position ln, final Alignment align, final boolean fill, final int link) throws IOException {
 	this.CellFit(w, h, txt, border, ln, align, fill, link, ScaleMode.CHARSPACE, false);
     }
 
@@ -1629,8 +1611,8 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void CellFitSpaceForce(final float w, final float h, final String txt, final Borders border,
-	    final Position ln, final Alignment align, final boolean fill, final int link) throws IOException {
+    public void CellFitSpaceForce(final float w, final float h, final String txt, final Borders border, final Position ln, final Alignment align, final boolean fill, final int link)
+	    throws IOException {
 	// Same as calling CellFit directly
 	this.CellFit(w, h, txt, border, ln, align, fill, link, ScaleMode.CHARSPACE, true);
     }
@@ -1649,8 +1631,7 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void CellFitSpaceForce(final float w, final float h, final String txt, final Position ln)
-	    throws IOException {
+    public void CellFitSpaceForce(final float w, final float h, final String txt, final Position ln) throws IOException {
 	this.CellFitSpaceForce(w, h, txt, null, ln, null, false, 0);
     }
 
@@ -1740,8 +1721,7 @@ public abstract class FPDF {
      *            link identifier for the image
      * @throws IOException
      */
-    public void Image(final String file, final Coordinate coords, final float w, final float h, final ImageType type,
-	    final int link) throws IOException {
+    public void Image(final String file, final Coordinate coords, final float w, final float h, final ImageType type, final int link) throws IOException {
 	Map<String, Object> info = null;
 	if (this.images.get(file) == null) {
 	    // First use of image, get info
@@ -1783,8 +1763,7 @@ public abstract class FPDF {
 		    / ((Integer) info.get("w")).floatValue(); //$NON-NLS-1$
 	}
 	this._out(String.format(Locale.ENGLISH, "q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q", //$NON-NLS-1$
-		Float.valueOf(w1 * this.k), Float.valueOf(h1 * this.k), Float.valueOf(coords.getX() * this.k),
-		Float.valueOf((this.h - (coords.getY() + h1)) * this.k), info.get("i"))); //$NON-NLS-1$
+		Float.valueOf(w1 * this.k), Float.valueOf(h1 * this.k), Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - (coords.getY() + h1)) * this.k), info.get("i"))); //$NON-NLS-1$
 	if (link > 0) {
 	    this.Link(coords.getX(), coords.getY(), w1, h1, link);
 	}
@@ -1834,8 +1813,7 @@ public abstract class FPDF {
      */
     public void Line(final Coordinate start, final Coordinate end) {
 	this._out(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S", //$NON-NLS-1$
-		Float.valueOf(start.getX() * this.k), Float.valueOf((this.h - start.getY()) * this.k),
-		Float.valueOf(end.getX() * this.k), Float.valueOf((this.h - end.getY()) * this.k)));
+		Float.valueOf(start.getX() * this.k), Float.valueOf((this.h - start.getY()) * this.k), Float.valueOf(end.getX() * this.k), Float.valueOf((this.h - end.getY()) * this.k)));
     }
 
     /** Put a link on the page */
@@ -1881,8 +1859,7 @@ public abstract class FPDF {
      * @throws IOException
      *             if the default font can not be loaded.
      */
-    public void MultiCell(final float w, final float h, final String txt, final Borders border, final Alignment align,
-	    final boolean fill) throws IOException {
+    public void MultiCell(final float w, final float h, final String txt, final Borders border, final Alignment align, final boolean fill) throws IOException {
 	final float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
 	final Charwidths cw = this.currentFont.getCw();
 	final float wmax = (w1 - 2 * this.cMargin) * 1000 / this.fontSize;
@@ -2047,8 +2024,7 @@ public abstract class FPDF {
     public void Rect(final Coordinate coords, final float w, final float h, final DrawMode mode) {
 	if (mode != null) {
 	    this._out(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re %s", //$NON-NLS-1$
-		    Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - coords.getY()) * this.k),
-		    Float.valueOf(w * this.k), Float.valueOf(-h * this.k), mode.getOp()));
+		    Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - coords.getY()) * this.k), Float.valueOf(w * this.k), Float.valueOf(-h * this.k), mode.getOp()));
 	}
     }
 
@@ -2066,8 +2042,7 @@ public abstract class FPDF {
      * @param mode
      *            the drawing mode
      */
-    public void Curve(final Coordinate start, final Coordinate point1, final Coordinate point2, final Coordinate end,
-	    final DrawMode mode) {
+    public void Curve(final Coordinate start, final Coordinate point1, final Coordinate point2, final Coordinate end, final DrawMode mode) {
 	if (mode != null) {
 	    this._Point(start);
 	    this._Curve(point1, point2, end);
@@ -2091,8 +2066,7 @@ public abstract class FPDF {
      * @param segments
      *            the number of segments
      */
-    public void Ellipse(final Coordinate coords, final float rx, final float ry, final double angle,
-	    final DrawMode mode, final int segments) {
+    public void Ellipse(final Coordinate coords, final float rx, final float ry, final double angle, final DrawMode mode, final int segments) {
 	this.Ellipse(coords, rx, ry, angle, 0, 360, mode, segments);
     }
 
@@ -2116,8 +2090,7 @@ public abstract class FPDF {
      * @param segments
      *            the number of segments
      */
-    public void Ellipse(final Coordinate coords, final float rx, final float ry, final double angle,
-	    final double aStart, final double aFinish, final DrawMode mode, final int segments) {
+    public void Ellipse(final Coordinate coords, final float rx, final float ry, final double angle, final double aStart, final double aFinish, final DrawMode mode, final int segments) {
 	if ((rx > 0) && (mode != null)) {
 	    float ry1 = ry;
 	    float rx1 = rx;
@@ -2159,8 +2132,7 @@ public abstract class FPDF {
 		b1 = y0 + (ry * Math.sin(t1));
 		c1 = -rx * Math.sin(t1);
 		d1 = ry * Math.cos(t1);
-		this._Curve(new Coordinate((a0 + (c0 * dtm)) / this.k, this.h - ((b0 + (d0 * dtm)) / this.k)),
-			new Coordinate((a1 - (c1 * dtm)) / this.k, this.h - ((b1 - (d1 * dtm)) / this.k)),
+		this._Curve(new Coordinate((a0 + (c0 * dtm)) / this.k, this.h - ((b0 + (d0 * dtm)) / this.k)), new Coordinate((a1 - (c1 * dtm)) / this.k, this.h - ((b1 - (d1 * dtm)) / this.k)),
 			new Coordinate(a1 / this.k, this.h - (b1 / this.k)));
 		a0 = a1;
 		b0 = b1;
@@ -2206,8 +2178,7 @@ public abstract class FPDF {
      * @param segments
      *            the number of segments
      */
-    public void Circle(final Coordinate coords, final float r, final double aStart, final double aFinish,
-	    final DrawMode mode, final int segments) {
+    public void Circle(final Coordinate coords, final float r, final double aStart, final double aFinish, final DrawMode mode, final int segments) {
 	this.Ellipse(coords, r, 0, 0, aStart, aFinish, mode, segments);
     }
 
@@ -2244,8 +2215,7 @@ public abstract class FPDF {
      * @param mode
      *            the drawing mode
      */
-    public void RegularPolygon(final Coordinate coords, final float r, final int sides, final double angle,
-	    final DrawMode mode) {
+    public void RegularPolygon(final Coordinate coords, final float r, final int sides, final double angle, final DrawMode mode) {
 	final int sides1 = (sides < 3) ? 3 : sides;
 	final Coordinate[] p = new Coordinate[sides1];
 	for (int i = 0; i < sides1; i++) {
@@ -2272,8 +2242,7 @@ public abstract class FPDF {
      * @param mode
      *            the drawing mode
      */
-    public void StarPolygon(final Coordinate coords, final float r, final int vertices, final int gaps,
-	    final double angle, final DrawMode mode) {
+    public void StarPolygon(final Coordinate coords, final float r, final int vertices, final int gaps, final double angle, final DrawMode mode) {
 	final int nv = (vertices < 2) ? 2 : vertices;
 	final Coordinate[] p2 = new Coordinate[nv];
 	final boolean[] visited = new boolean[nv];
@@ -2314,23 +2283,19 @@ public abstract class FPDF {
 	    float xc = coords.getX() + w - r;
 	    float yc = coords.getY() + r;
 	    this._Line(new Coordinate(xc, coords.getY()));
-	    this._Curve(new Coordinate(xc + (r * myArc), yc - r), new Coordinate(xc + r, yc - (r * myArc)),
-		    new Coordinate(xc + r, yc));
+	    this._Curve(new Coordinate(xc + (r * myArc), yc - r), new Coordinate(xc + r, yc - (r * myArc)), new Coordinate(xc + r, yc));
 	    xc = xc;
 	    yc = coords.getY() + h - r;
 	    this._Line(new Coordinate(coords.getX() + w, yc));
-	    this._Curve(new Coordinate(xc + r, yc + (r * myArc)), new Coordinate(xc + (r * myArc), yc + r),
-		    new Coordinate(xc, yc + r));
+	    this._Curve(new Coordinate(xc + r, yc + (r * myArc)), new Coordinate(xc + (r * myArc), yc + r), new Coordinate(xc, yc + r));
 	    xc = coords.getX() + r;
 	    yc = yc;
 	    this._Line(new Coordinate(xc, coords.getY() + h));
-	    this._Curve(new Coordinate(xc - (r * myArc), yc + r), new Coordinate(xc - r, yc + (r * myArc)),
-		    new Coordinate(xc - r, yc));
+	    this._Curve(new Coordinate(xc - (r * myArc), yc + r), new Coordinate(xc - r, yc + (r * myArc)), new Coordinate(xc - r, yc));
 	    xc = xc;
 	    yc = coords.getY() + r;
 	    this._Line(new Coordinate(coords.getX(), yc));
-	    this._Curve(new Coordinate(xc - r, yc - (r * myArc)), new Coordinate(xc - (r * myArc), yc - r),
-		    new Coordinate(xc, yc - r));
+	    this._Curve(new Coordinate(xc - r, yc - (r * myArc)), new Coordinate(xc - (r * myArc), yc - r), new Coordinate(xc, yc - r));
 	    this._out(String.valueOf(mode.getOp()));
 	}
     }
@@ -2369,8 +2334,7 @@ public abstract class FPDF {
      */
     protected void _Curve(final Coordinate control1, final Coordinate control2, final Coordinate end) {
 	this._out(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f %.2f %.2f c", //$NON-NLS-1$
-		control1.getX() * this.k, (this.h - control1.getY()) * this.k, control2.getX() * this.k,
-		(this.h - control2.getY()) * this.k, end.getX() * this.k, (this.h - end.getY()) * this.k));
+		control1.getX() * this.k, (this.h - control1.getY()) * this.k, control2.getX() * this.k, (this.h - control2.getY()) * this.k, end.getX() * this.k, (this.h - end.getY()) * this.k));
     }
 
     /** Author of document */
@@ -2436,8 +2400,7 @@ public abstract class FPDF {
 	    this.drawColor = String.format(Locale.ENGLISH, "%.3f G", Float.valueOf(color.getV() / 255f)); //$NON-NLS-1$
 	} else {
 	    this.drawColor = String.format(Locale.ENGLISH, "%.3f %.3f %.3f RG", //$NON-NLS-1$
-		    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
-		    Float.valueOf(color.getB() / 255f));
+		    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f), Float.valueOf(color.getB() / 255f));
 	}
 	if (this.page > 0) {
 	    this._out(this.drawColor);
@@ -2469,8 +2432,7 @@ public abstract class FPDF {
 	    this.fillColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); //$NON-NLS-1$
 	} else {
 	    this.fillColor = String.format(Locale.ENGLISH, "%.3f %.3f %.3f rg", //$NON-NLS-1$
-		    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
-		    Float.valueOf(color.getB() / 255f));
+		    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f), Float.valueOf(color.getB() / 255f));
 	}
 	this.colorFlag = (this.fillColor != this.textColor);
 	if (this.page > 0) {
@@ -2525,9 +2487,7 @@ public abstract class FPDF {
 	    size = this.fontSizePt;
 	}
 	// Test if font is already selected
-	if (((this.fontFamily != null) && this.fontFamily.equals(family))
-		&& (((this.fontStyle == null) && (style == null))
-			|| ((this.fontStyle != null) && this.fontStyle.equals(style)))
+	if (((this.fontFamily != null) && this.fontFamily.equals(family)) && (((this.fontStyle == null) && (style == null)) || ((this.fontStyle != null) && this.fontStyle.equals(style)))
 		&& (size == this.fontSizePt)) {
 	    return;
 	}
@@ -2545,8 +2505,7 @@ public abstract class FPDF {
 	    // Check if one of the standard fonts
 	    if (this.coreFonts.get(fontkey) != null) {
 		final int i = this.fonts.size() + 1;
-		final Font font = new Font(i, Font.Type.CORE, this.coreFonts.get(fontkey), -100, 50,
-			getCharwidths(fontkey));
+		final Font font = new Font(i, Font.Type.CORE, this.coreFonts.get(fontkey), -100, 50, getCharwidths(fontkey));
 		this.fonts.put(fontkey, font);
 	    } else {
 		throw new IOException("Undefined font: " //$NON-NLS-1$
@@ -2645,8 +2604,7 @@ public abstract class FPDF {
 	    this.textColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); //$NON-NLS-1$
 	} else {
 	    this.textColor = String.format(Locale.ENGLISH, "%.3f %.3f %.3f rg", //$NON-NLS-1$
-		    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
-		    Float.valueOf(color.getB() / 255f));
+		    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f), Float.valueOf(color.getB() / 255f));
 	}
 	this.colorFlag = (this.fillColor != this.textColor);
     }
