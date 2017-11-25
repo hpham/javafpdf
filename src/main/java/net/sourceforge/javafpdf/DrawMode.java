@@ -23,32 +23,40 @@ package net.sourceforge.javafpdf;
 
 /**
  * DOCME
- * 
+ *
  * @author pluma
- * @since 5 Mar 2008
  * @version $Rev: 8 $
+ * @since 5 Mar 2008
  */
 public enum DrawMode {
-    /** Draw the outline. */
+    /**
+     * Draw the outline.
+     */
     SHAPE('S'),
-    /** Fill the area. */
+    /**
+     * Fill the area.
+     */
     FILLED('f'),
-    /** Draw both. */
+    /**
+     * Draw both.
+     */
     BOTH('B'),
-    /** Draw the closed outline (ellipses only). */
+    /**
+     * Draw the closed outline (ellipses only).
+     */
     CLOSED('s');
     private final char op;
 
     private DrawMode(final char op) {
-	this.op = op;
+        this.op = op;
     }
 
     /**
      * Gets the operation code.
-     * 
+     *
      * @return the opcode.
      */
     public char getOp() {
-	return this.op;
+        return this.op;
     }
 }

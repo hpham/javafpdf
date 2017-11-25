@@ -23,14 +23,18 @@ package net.sourceforge.javafpdf;
 
 /**
  * DOCME
- * 
+ *
  * @author Alan Plum
- * @since 5 Mar 2008
  * @version $Rev: 8 $
+ * @since 5 Mar 2008
  */
 public enum ImageType {
-    /** Portable Network Graphics image. */
+    /**
+     * Portable Network Graphics image.
+     */
     PNG,
-    /** Joint Photographic Experts Group image. */
+    /**
+     * Joint Photographic Experts Group image.
+     */
     JPEG;
 }

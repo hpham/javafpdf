@@ -24,10 +24,10 @@ package net.sourceforge.javafpdf;
 /**
  * Borders object. Tells FPDF which borders to draw.<br>
  * TODO: use LineStyle to define the styling of each border.
- * 
+ *
  * @author Alan Plum
- * @since 5 Mar 2008
  * @version $Rev: 8 $
+ * @since 5 Mar 2008
  */
 public class Borders {
     private final boolean left;
@@ -40,75 +40,71 @@ public class Borders {
 
     /**
      * Constructor. Creates a Borders object with the given border settings.
-     * 
-     * @param left
-     *            whether to draw the left border
-     * @param top
-     *            whether to draw the top border
-     * @param right
-     *            whether to draw the right border
-     * @param bottom
-     *            whether to draw the bottom border
+     *
+     * @param left   whether to draw the left border
+     * @param top    whether to draw the top border
+     * @param right  whether to draw the right border
+     * @param bottom whether to draw the bottom border
      */
     public Borders(final boolean left, final boolean top, final boolean right, final boolean bottom) {
-	this.left = left;
-	this.top = top;
-	this.right = right;
-	this.bottom = bottom;
+        this.left = left;
+        this.top = top;
+        this.right = right;
+        this.bottom = bottom;
     }
 
     /**
      * Constructor. Creates a Borders object with all borders set.
      */
     public Borders() {
-	this.left = true;
-	this.top = true;
-	this.right = true;
-	this.bottom = true;
+        this.left = true;
+        this.top = true;
+        this.right = true;
+        this.bottom = true;
     }
 
     /**
      * Gets the left border.
-     * 
+     *
      * @return whether the left border is set.
      */
     public boolean getLeft() {
-	return this.left;
+        return this.left;
     }
 
     /**
      * Gets the top border.
-     * 
+     *
      * @return whether the top border is set.
      */
     public boolean getTop() {
-	return this.top;
+        return this.top;
     }
 
     /**
      * Gets the right border.
-     * 
+     *
      * @return whether the right border is set.
      */
     public boolean getRight() {
-	return this.right;
+        return this.right;
     }
 
     /**
      * Gets the bottom border.
-     * 
+     *
      * @return whether the bottom border is set.
      */
     public boolean getBottom() {
-	return this.bottom;
+        return this.bottom;
     }
 
     /**
      * Get all borders.
-     * 
+     *
      * @return whether all borders are set.
      */
     public boolean getAll() {
-	return this.left && this.top && this.right && this.bottom;
+        return this.left && this.top && this.right && this.bottom;
     }
 }

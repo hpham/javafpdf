@@ -23,30 +23,36 @@ package net.sourceforge.javafpdf;
 
 /**
  * DOCME
- * 
+ *
  * @author Alan Plum
- * @since 7 Mar 2008
  * @version $Rev: 8 $
+ * @since 7 Mar 2008
  */
 public enum FontStyle {
-    /** Boldface. */
+    /**
+     * Boldface.
+     */
     BOLD('B'),
-    /** Italized. */
+    /**
+     * Italized.
+     */
     ITALIC('I'),
-    /** Underlined. */
+    /**
+     * Underlined.
+     */
     UNDERLINE('U');
     private char op;
 
     private FontStyle(final char op) {
-	this.op = op;
+        this.op = op;
     }
 
     /**
      * Gets the opcode.
-     * 
+     *
      * @return the opcode.
      */
     public char getOp() {
-	return this.op;
+        return this.op;
     }
 }

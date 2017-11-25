@@ -23,16 +23,22 @@ package net.sourceforge.javafpdf;
 
 /**
  * Position to place the pointer after a call.
- * 
+ *
  * @author Alan Plum
- * @since 5 Mar 2008
  * @version $Rev: 8 $
+ * @since 5 Mar 2008
  */
 public enum Position {
-    /** To the right of the last position. */
+    /**
+     * To the right of the last position.
+     */
     RIGHTOF,
-    /** Insert a line break. */
+    /**
+     * Insert a line break.
+     */
     NEXTLINE,
-    /** Place the pointer below the last position. */
+    /**
+     * Place the pointer below the last position.
+     */
     BELOW;
 }

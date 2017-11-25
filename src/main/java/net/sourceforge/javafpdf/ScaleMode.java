@@ -23,14 +23,18 @@ package net.sourceforge.javafpdf;
 
 /**
  * DOCME
- * 
+ *
  * @author pluma
- * @since 5 Mar 2008
  * @version $Rev: 8 $
+ * @since 5 Mar 2008
  */
 public enum ScaleMode {
-    /** Character spacing. */
+    /**
+     * Character spacing.
+     */
     CHARSPACE,
-    /** Horizontal scaling. */
+    /**
+     * Horizontal scaling.
+     */
     HORIZONTAL;
 }

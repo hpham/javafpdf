@@ -2,18 +2,26 @@ package net.sourceforge.javafpdf;
 
 /**
  * PDF zoom mode.
- * 
+ *
  * @author Alan Plum
- * @since 4 Mar 2008
  * @version $Rev: 8 $
+ * @since 4 Mar 2008
  */
 public enum Zoom {
-    /** Full page zoom. */
+    /**
+     * Full page zoom.
+     */
     FULLPAGE,
-    /** Full width zoom. */
+    /**
+     * Full width zoom.
+     */
     FULLWIDTH,
-    /** Real zoom. */
+    /**
+     * Real zoom.
+     */
     REAL,
-    /** Default zoom. */
+    /**
+     * Default zoom.
+     */
     DEFAULT;
 }

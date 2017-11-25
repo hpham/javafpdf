@@ -23,10 +23,10 @@ package net.sourceforge.javafpdf;
 
 /**
  * A two-dimensional coordinate.
- * 
+ *
  * @author Alan Plum
- * @since 5 Mar 2008
  * @version $Rev: 8 $
+ * @since 5 Mar 2008
  */
 public class Coordinate {
     private final float x;
@@ -35,45 +35,41 @@ public class Coordinate {
 
     /**
      * Constructor.
-     * 
-     * @param x
-     *            the x position
-     * @param y
-     *            the y position
+     *
+     * @param x the x position
+     * @param y the y position
      */
     public Coordinate(final float x, final float y) {
-	this.x = x;
-	this.y = y;
+        this.x = x;
+        this.y = y;
     }
 
     /**
      * Constructor.
-     * 
-     * @param x
-     *            the x position
-     * @param y
-     *            the y position
+     *
+     * @param x the x position
+     * @param y the y position
      */
     public Coordinate(final double x, final double y) {
-	this.x = (float) x;
-	this.y = (float) y;
+        this.x = (float) x;
+        this.y = (float) y;
     }
 
     /**
      * DOCME
-     * 
+     *
      * @return the x
      */
     public float getX() {
-	return this.x;
+        return this.x;
     }
 
     /**
      * DOCME
-     * 
+     *
      * @return the y
      */
     public float getY() {
-	return this.y;
+        return this.y;
     }
 }

@@ -23,10 +23,10 @@ package net.sourceforge.javafpdf;
 
 /**
  * DOCME
- * 
+ *
  * @author pluma
- * @since 5 Mar 2008
  * @version $Rev: 8 $
+ * @since 5 Mar 2008
  */
 public class Color {
     private final int r;
@@ -37,75 +37,71 @@ public class Color {
 
     /**
      * Constructor.
-     * 
-     * @param r
-     *            the red
-     * @param g
-     *            the green
-     * @param b
-     *            the blue
+     *
+     * @param r the red
+     * @param g the green
+     * @param b the blue
      */
     public Color(final int r, final int g, final int b) {
-	this.r = r % 256;
-	this.g = g % 256;
-	this.b = b % 256;
+        this.r = r % 256;
+        this.g = g % 256;
+        this.b = b % 256;
     }
 
     /**
      * Constructor. Creates a grayscale color.
-     * 
-     * @param v
-     *            the value
+     *
+     * @param v the value
      */
     public Color(final int v) {
-	this.r = v % 256;
-	this.g = v % 256;
-	this.b = v % 256;
+        this.r = v % 256;
+        this.g = v % 256;
+        this.b = v % 256;
     }
 
     /**
      * DOCME
-     * 
+     *
      * @return the value
      */
     public int getV() {
-	return (this.r + this.g + this.b) / 3;
+        return (this.r + this.g + this.b) / 3;
     }
 
     /**
      * Checks whether the color is grayscale.
-     * 
+     *
      * @return <code>true</code> if all three colors are identical;
-     *         <code>false</code> otherwise.
+     * <code>false</code> otherwise.
      */
     public boolean isGrayscale() {
-	return ((this.r == this.g) && (this.g == this.b));
+        return ((this.r == this.g) && (this.g == this.b));
     }
 
     /**
      * DOCME
-     * 
+     *
      * @return the red
      */
     public int getR() {
-	return this.r;
+        return this.r;
     }
 
     /**
      * DOCME
-     * 
+     *
      * @return the green
      */
     public int getG() {
-	return this.g;
+        return this.g;
     }
 
     /**
      * DOCME
-     * 
+     *
      * @return the blue
      */
     public int getB() {
-	return this.b;
+        return this.b;
     }
 }

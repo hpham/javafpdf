@@ -2,18 +2,26 @@ package net.sourceforge.javafpdf;
 
 /**
  * PDF display layout.
- * 
+ *
  * @author Alan Plum
- * @since 4 Mar 2008
  * @version $Rev: 8 $
+ * @since 4 Mar 2008
  */
 public enum Layout {
-    /** Single page layout. */
+    /**
+     * Single page layout.
+     */
     SINGLE,
-    /** Continuous layout. */
+    /**
+     * Continuous layout.
+     */
     CONTINUOUS,
-    /** Two pages layout. */
+    /**
+     * Two pages layout.
+     */
     TWO,
-    /** Default layout. */
+    /**
+     * Default layout.
+     */
     DEFAULT;
 }

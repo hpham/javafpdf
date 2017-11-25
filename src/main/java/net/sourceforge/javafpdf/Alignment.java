@@ -23,18 +23,26 @@ package net.sourceforge.javafpdf;
 
 /**
  * Text alignment.
- * 
+ *
  * @author Alan Plum
- * @since 4 Mar 2008
  * @version $Rev: 8 $
+ * @since 4 Mar 2008
  */
 public enum Alignment {
-    /** Left alignment. */
+    /**
+     * Left alignment.
+     */
     LEFT,
-    /** Right alignment. */
+    /**
+     * Right alignment.
+     */
     RIGHT,
-    /** Center alignment. */
+    /**
+     * Center alignment.
+     */
     CENTER,
-    /** Justification / Default. */
+    /**
+     * Justification / Default.
+     */
     JUSTIFIED;
 }
