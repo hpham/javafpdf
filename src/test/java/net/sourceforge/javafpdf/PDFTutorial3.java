@@ -26,7 +26,7 @@ public class PDFTutorial3 extends FPDF {
             // Text color in gray
             setTextColor(128, 0, 0);
             // Page number
-            Cell(0, 10, "Page " + pageNo(), Position.BELOW, Alignment.CENTER);
+            Cell(0, 10, "Page " + pageNo(), null, Position.RIGHTOF, Alignment.CENTER, true , 0);
         } catch (final IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -52,7 +52,7 @@ public class PDFTutorial3 extends FPDF {
             setLineWidth(1);
             // Title
 
-            Cell(w, 9, title, null, Position.NEXTLINE, Alignment.JUSTIFIED, true, 0);
+            Cell(w, 9, title, new Borders(), Position.NEXTLINE, Alignment.CENTER, true, 0);
             Ln(10);
         } catch (final IOException e) {
             // TODO Auto-generated catch block
@@ -67,7 +67,7 @@ public class PDFTutorial3 extends FPDF {
         // Background color
         setFillColor(200, 220, 255);
         // Title
-        Cell(0, 6, "Chapter " + num + ": " + label, new Borders(), Position.NEXTLINE, Alignment.JUSTIFIED, true, 0);
+        Cell(0, 6, "Chapter " + num + ": " + label, null, Position.NEXTLINE, Alignment.LEFT, true, 0);
         // Line break
         Ln(4);
     }

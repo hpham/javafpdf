@@ -28,7 +28,7 @@ public class PDFTutorial2 extends FPDF {
             // Move to the right
             Cell(80.0f, 0f);
             // Title
-            Cell(30.0f, 10.0f, "Title", Position.NEXTLINE, Alignment.CENTER);
+            Cell(30.0f, 10.0f, "Title", new Borders(), Position.NEXTLINE, Alignment.CENTER, true, 0);
             // Line break
             Ln(20);
         } catch (final IOException e) {
