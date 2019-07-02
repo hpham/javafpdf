@@ -683,26 +683,26 @@ public abstract class FPDF {
     protected void _out(final String s) {
         // Add a line to the document
         if (this.state == PDFCreationState.PAGE) {
-try {
-				this.pages.get(Integer.valueOf(this.page)).add((s + '\n').getBytes("ISO-8859-1"));
-			} catch (UnsupportedEncodingException e) {
-				this.pages.get(Integer.valueOf(this.page)).add((s + '\n').getBytes());
-				e.printStackTrace();
-			}
+            try {
+                this.pages.get(this.page).add((s + '\n').getBytes("ISO-8859-1"));
+            } catch (UnsupportedEncodingException e) {
+                this.pages.get(this.page).add((s + '\n').getBytes());
+                e.printStackTrace();
+            }
         } else {
-        /*
-         * NOTE This is a hack put in place because Java converts to true
-	     * ISO-8859-1 -- rather than the Windows 125x faux "Latin-1" which
-	     * is used almost everywhere else and supports the euro sign (unlike
-	     * the real thing). This probably should be replaced/removed if it
-	     * causes any trouble or unexpected side-effects. Binary data should
-	     * probably not go through this method.
-	     */
+            /*
+             * NOTE This is a hack put in place because Java converts to true
+             * ISO-8859-1 -- rather than the Windows 125x faux "Latin-1" which
+             * is used almost everywhere else and supports the euro sign (unlike
+             * the real thing). This probably should be replaced/removed if it
+             * causes any trouble or unexpected side-effects. Binary data should
+             * probably not go through this method.
+             */
             try {
                 this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes("ISO-8859-1")); //$NON-NLS-1$
             } catch (final UnsupportedEncodingException e) {
                 this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes());
-e.printStackTrace();
+                e.printStackTrace();
             }
         }
     }
