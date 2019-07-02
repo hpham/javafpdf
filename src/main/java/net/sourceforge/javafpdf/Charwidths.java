@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so,  subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,7 +44,10 @@ class Charwidths {
      * @throws IOException if an error occurred when reading from the file.
      */
     public Charwidths(final String name) throws IOException {
-        final InputStream stream = this.getClass().getResourceAsStream("fonts/" + name + ".widths"); //$NON-NLS-1$//$NON-NLS-2$
+        final InputStream stream = this.getClass().getResourceAsStream("fonts/" + name + ".widths");
+        if (stream == null) {
+            throw new IOException("resource " + name + " not found with getResourceAsStream()");
+        }
         this.props = new Properties();
         this.props.load(stream);
         stream.close();

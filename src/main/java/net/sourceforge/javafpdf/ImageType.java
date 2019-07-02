@@ -29,12 +29,10 @@ package net.sourceforge.javafpdf;
  * @since 5 Mar 2008
  */
 public enum ImageType {
-    /**
-     * Portable Network Graphics image.
-     */
-    PNG,
-    /**
-     * Joint Photographic Experts Group image.
-     */
-    JPEG;
+	/** Portable Network Graphics image. */
+	PNG,
+	/** Joint Photographic Experts Group image. */
+	JPEG,
+	/** Graphics Interchange Format image. */
+	GIF;
 }

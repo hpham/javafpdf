@@ -21,6 +21,10 @@
  */
 package net.sourceforge.javafpdf;
 
+import java.awt.color.ColorSpace;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,15 +32,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import javax.imageio.ImageIO;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import net.sourceforge.javafpdf.util.Compressor;
+import org.apache.sanselan.ImageReadException;
 
 /**
  * Faithful Java port of <a href="http://www.fpdf.org">FPDF for PHP</a>.
@@ -112,7 +121,7 @@ public abstract class FPDF {
     /**
      * current document state
      */
-    protected int state;
+    protected PDFCreationState state;
 
     /**
      * compression flag
@@ -351,11 +360,11 @@ public abstract class FPDF {
 
     private static final String revision;
 
-    static {
-        // Some SVN magic to find out the revision of this class
-        final String rev = "$Rev: 18 $"; //$NON-NLS-1$
-        revision = rev.substring(6, rev.length() - 2);
-    }
+	static {
+		// Some CVS magic to find out the revision of this class
+		String rev = "$Revision: 1.10 $"; 
+		revision = rev.substring(11, rev.length() - 2);
+	}
 
     /**
      * Default Constructor. Creates an FPDF object with Portrait orientation, MM
@@ -428,7 +437,7 @@ public abstract class FPDF {
         this.buffer = new ArrayList<byte[]>();
         this.pages = new HashMap<Integer, List<byte[]>>();
         this.orientationChanges = new HashMap<Integer, Boolean>();
-        this.state = 0;
+        this.state = PDFCreationState.NONE;
         this.fonts = new HashMap<String, Font>();
         this.diffs = new HashMap<Integer, String>();
         this.images = new HashMap<String, Map<String, Object>>();
@@ -504,7 +513,7 @@ public abstract class FPDF {
     protected void _beginpage(final Orientation orientation) {
         this.page++;
         this.pages.put(Integer.valueOf(this.page), new ArrayList<byte[]>());
-        this.state = 2;
+        this.state = PDFCreationState.PAGE;
         this.x = this.lMargin;
         this.y = this.tMargin;
         this.fontFamily = ""; //$NON-NLS-1$
@@ -530,15 +539,16 @@ public abstract class FPDF {
         }
     }
 
-    /**
-     * Underline text
-     */
-    protected String _dounderline(final float x, final float y, final String txt) {
-        final float w = this.getStringWidth(txt) + this.ws * (txt.split(" ")).length; //$NON-NLS-1$
-        return String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re f", //$NON-NLS-1$
-                Float.valueOf(x * this.k), Float.valueOf(this.h - (y - this.currentFont.getUp() / 1000 * this.fontSize) * this.k), Float.valueOf(w * this.k),
-                Float.valueOf(-this.currentFont.getUt() / 1000 * this.fontSizePt));
-    }
+	/** Underline text */
+	protected String _dounderline(final float x, final float y, final String txt) {
+		float w = this.getStringWidth(txt) + this.ws * (txt.split(" ")).length; 
+		return String.format(
+				Locale.ENGLISH,
+				"%.2f %.2f %.2f %.2f re f", 
+				Float.valueOf(x * this.k),
+				Float.valueOf(this.h - (y - this.currentFont.getUp() / 1000 * this.fontSize) * this.k),
+				Float.valueOf(w * this.k), Float.valueOf(-this.currentFont.getUt() / 1000 * this.fontSizePt));
+	}
 
     protected void _enddoc() {
         this._putheader();
@@ -573,14 +583,14 @@ public abstract class FPDF {
         this._out("startxref"); //$NON-NLS-1$
         this._out(Integer.toString(o));
         this._out("%%EOF"); //$NON-NLS-1$
-        this.state = 3;
+        this.state = PDFCreationState.FINISHED;
     }
 
     /**
      * End of page contents
      */
     protected void _endpage() {
-        this.state = 1;
+        this.state = PDFCreationState.OPENED;
     }
 
     /**
@@ -672,8 +682,13 @@ public abstract class FPDF {
 
     protected void _out(final String s) {
         // Add a line to the document
-        if (this.state == 2) {
-            this.pages.get(Integer.valueOf(this.page)).add((s + '\n').getBytes());
+        if (this.state == PDFCreationState.PAGE) {
+try {
+				this.pages.get(Integer.valueOf(this.page)).add((s + '\n').getBytes("ISO-8859-1"));
+			} catch (UnsupportedEncodingException e) {
+				this.pages.get(Integer.valueOf(this.page)).add((s + '\n').getBytes());
+				e.printStackTrace();
+			}
         } else {
         /*
          * NOTE This is a hack put in place because Java converts to true
@@ -687,127 +702,200 @@ public abstract class FPDF {
                 this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes("ISO-8859-1")); //$NON-NLS-1$
             } catch (final UnsupportedEncodingException e) {
                 this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes());
+e.printStackTrace();
             }
         }
     }
 
-    protected Map<String, Object> _parsejpg(final File file) {
-        // FIXME handle JPEGs
-        throw new NotImplementedException();
-    }
+    protected Map<String, Object> _parsejpg(String fileName, byte[] data) {
+		BufferedImage img = null;
+		try {
+			// Image quality isn't the best this way but it fully supports CMYK and YCCK
+                        JpegReader jpegReader = new JpegReader();
+                        img = jpegReader.readImage(data);
+			
+			String colspace;
+                        // In some cases ColorSpaces get converted by jpegReader but not always
+                        // 9 - TYPE_CMYK
+                        // 5 - TYPE_RGB
+                        // 6 - TYPE_GRAY
+			if (img.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_CMYK) {
+ 				colspace = "DeviceCMYK";
+ 			} else if (img.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_RGB) {
+ 				colspace = "DeviceRGB";
+ 			} else if (img.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_GRAY) {
+ 				colspace = "DeviceGray";
+ 			} else {
+ 				throw new IllegalArgumentException("Ungültiges Farbmodell " + img.getColorModel().getColorSpace().getType());
+ 			}
+                        // 
+                        ByteArrayOutputStream boas = new ByteArrayOutputStream();
+			ImageIO.write(img, "jpg", boas);
+                        // Load image map with img metadata / raw image data
+                        Map<String, Object> image = new HashMap<>();
+                        image.put("w", Integer.valueOf(img.getWidth()));
+			image.put("h", Integer.valueOf(img.getHeight()));
+			image.put("cs", colspace); 
+			image.put("bpc", 8); 
+			image.put("f", "DCTDecode"); 
+			image.put("i", Integer.valueOf(this.images.size() + 1)); 
+			image.put("data", boas.toByteArray()); 
+			return image;
+		} catch (IOException | ImageReadException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
     /**
      * Extract info from a PNG file
      */
-    protected Map<String, Object> _parsepng(final File file) throws IOException {
-        final InputStream f = new FileInputStream(file);
-        try {
-            // Check signature
-            final char[] sig = new char[]{137, 'P', 'N', 'G', 13, 10, 26, 10};
-            for (int i = 0; i < sig.length; i++) {
-                final int in = f.read();
-                final char c = (char) in;
-                if (c != sig[i]) {
-                    throw new IOException("Not a PNG file: " + file); //$NON-NLS-1$
-                }
-            }
-            this._fread(f, 4);
-            // Read header chunk
-            final char[] chunk = new char[]{'I', 'H', 'D', 'R'};
-            for (int i = 0; i < chunk.length; i++) {
-                final int in = f.read();
-                final char c = (char) in;
-                if (c != chunk[i]) {
-                    throw new IOException("Not a PNG file: " + file); //$NON-NLS-1$
-                }
-            }
-            final int w = this._freadint(f);
-            final int h = this._freadint(f);
-            final int bpc = f.read();
-            if (bpc > 8) {
-                throw new IOException("16-bit depth not supported: " + file); //$NON-NLS-1$
-            }
-            final int ct = f.read();
-            String colspace;
-            if (ct == 0) {
-                colspace = "DeviceGray"; //$NON-NLS-1$
-            } else if (ct == 2) {
-                colspace = "DeviceRGB"; //$NON-NLS-1$
-            } else if (ct == 3) {
-                colspace = "Indexed"; //$NON-NLS-1$
-            } else {
-                throw new IOException("Alpha channel not supported: " + file); //$NON-NLS-1$
-            }
-            if (f.read() != 0) {
-                throw new IOException("Unknown compression method: " + file); //$NON-NLS-1$
-            }
-            if (f.read() != 0) {
-                throw new IOException("Unknown filter method: " + file); //$NON-NLS-1$
-            }
-            if (f.read() != 0) {
-                throw new IOException("Interlacing not supported: " + file); //$NON-NLS-1$
-            }
-            this._fread(f, 4);
-            final StringBuilder sb = new StringBuilder();
-            sb.append("/DecodeParms <</Predictor 15 /Colors ") //$NON-NLS-1$
-                    .append(ct == 2 ? 3 : 1).append(" /BitsPerComponent ").append(bpc) //$NON-NLS-1$
-                    .append(" /Columns ").append(w).append(">>"); //$NON-NLS-1$//$NON-NLS-2$
-            final String parms = sb.toString();
-            // Scan chunks looking for palette, transparency and image data
-            byte[] pal = null;
-            byte[] trns = null;
-            byte[] data = null;
-            do {
-                final int n = this._freadint(f);
-                final String type = new String(this._fread(f, 4));
-                if (type.equals("PLTE")) { //$NON-NLS-1$
-                    // Read palette
-                    pal = this._freadb(f, n);
-                    this._fread(f, 4);
-                } else if (type.equals("tRNS")) { //$NON-NLS-1$
-                    // Read transparency info
-                    final byte[] t = this._freadb(f, n);
-                    if (ct == 0) {
-                        trns = new byte[]{t[1]};
-                    } else if (ct == 2) {
-                        trns = new byte[]{t[1], t[3], t[5]};
-                    } else {
-                        final int pos = new String(t).indexOf(0);
-                        if (pos != -1) {
-                            trns = new byte[]{(byte) pos};
-                        }
-                    }
-                    this._fread(f, 4);
-                } else if (type.equals("IDAT")) { //$NON-NLS-1$
-                    // Read image data block
-                    data = this._freadb(f, n, data);
-                    this._fread(f, 4);
-                } else if (type.equals("IEND")) { //$NON-NLS-1$
-                    break;
-                } else {
-                    this._fread(f, n + 4);
-                }
-            } while (f.available() > 0);
-            if (colspace.equals("Indexed") && (pal == null)) { //$NON-NLS-1$
-                throw new IOException("Missing palette in " + file); //$NON-NLS-1$
-            }
-            final Map<String, Object> image = new HashMap<String, Object>();
-            image.put("w", Integer.valueOf(w)); //$NON-NLS-1$
-            image.put("h", Integer.valueOf(h)); //$NON-NLS-1$
-            image.put("cs", colspace); //$NON-NLS-1$
-            image.put("bpc", Integer.valueOf(bpc)); //$NON-NLS-1$
-            image.put("f", "FlateDecode"); //$NON-NLS-1$//$NON-NLS-2$
-            image.put("parms", parms); //$NON-NLS-1$
-            image.put("pal", pal); //$NON-NLS-1$
-            image.put("trns", trns); //$NON-NLS-1$
-            image.put("data", data); //$NON-NLS-1$
-            image.put("i", Integer.valueOf(this.images.size() + 1)); //$NON-NLS-1$
-            return image;
-        } finally {
-            f.close();
-        }
-    }
-
+    protected Map<String, Object> _parsepng(String fileName, byte[] imageData) throws IOException {
+		try (ByteArrayInputStream f = new ByteArrayInputStream(imageData)) {
+			// Check signature
+			char[] sig = new char[] { 137, 'P', 'N', 'G', 13, 10, 26, 10 };
+			for (int i = 0; i < sig.length; i++) {
+				int in = f.read();
+				char c = (char) in;
+				if (c != sig[i]) {
+					throw new IOException("Not a PNG file: " + fileName); 
+				}
+			}
+			this._fread(f, 4);
+			// Read header chunk
+			char[] chunk = new char[] { 'I', 'H', 'D', 'R' };
+			for (int i = 0; i < chunk.length; i++) {
+				int in = f.read();
+				char c = (char) in;
+				if (c != chunk[i]) {
+					throw new IOException("Not a PNG file: " + fileName); 
+				}
+			}
+			int w = this._freadint(f);
+			int h = this._freadint(f);
+			int bpc = f.read();
+			if (bpc > 8) {
+				throw new IOException("16-bit depth not supported: " + fileName); 
+			}
+			int ct = f.read();
+			String colspace;
+			if (ct == 0) {
+				colspace = "DeviceGray"; 
+			} else if (ct == 2) {
+				colspace = "DeviceRGB"; 
+			} else if (ct == 3) {
+				colspace = "Indexed";
+			} else if (ct == 6) {
+				// RGBA needs handled separately
+				return _parsepngWithAlpha(fileName, imageData);
+			} else {
+				throw new IOException("Alpha channel not supported for grayscale PNG images: " + fileName); 
+			}
+			if (f.read() != 0) {
+				throw new IOException("Unknown compression method: " + fileName); 
+			}
+			if (f.read() != 0) {
+				throw new IOException("Unknown filter method: " + fileName); 
+			}
+			if (f.read() != 0) {
+				throw new IOException("Interlacing not supported: " + fileName); 
+			}
+			this._fread(f, 4);
+			StringBuilder sb = new StringBuilder();
+			sb.append("/DecodeParms <</Predictor 15 /Colors ").append( 
+					ct == 2 ? 3 : 1).append(" /BitsPerComponent ").append(bpc) 
+					.append(" /Columns ").append(w).append(">>"); 
+			String parms = sb.toString();
+			// Scan chunks looking for palette, transparency and image data
+			byte[] pal = null;
+			byte[] trns = null;
+			byte[] data = null;
+			do {
+				int n = this._freadint(f);
+				String type = new String(this._fread(f, 4));
+				if (type.equals("PLTE")) { 
+					// Read palette
+					pal = this._freadb(f, n);
+					this._fread(f, 4);
+				} else if (type.equals("tRNS")) { 
+					// Read transparency info
+					byte[] t = this._freadb(f, n);
+					if (ct == 0) {
+						trns = new byte[] { t[1] };
+					} else if (ct == 2) {
+						trns = new byte[] { t[1], t[3], t[5] };
+					} else {
+						int pos = new String(t).indexOf(0);
+						if (pos != -1) {
+							trns = new byte[] { (byte) pos };
+						}
+					}
+					this._fread(f, 4);
+				} else if (type.equals("IDAT")) { 
+					// Read image data block
+					data = this._freadb(f, n, data);
+					this._fread(f, 4);
+				} else if (type.equals("IEND")) { 
+					break;
+				} else {
+					this._fread(f, n + 4);
+				}
+			} while (f.available() > 0);
+			if (colspace.equals("Indexed") && (pal == null)) { 
+				throw new IOException("Missing palette in " + fileName); 
+			}
+			Map<String, Object> image = new HashMap<String, Object>();
+			image.put("w", Integer.valueOf(w)); 
+			image.put("h", Integer.valueOf(h)); 
+			image.put("cs", colspace); 
+			image.put("bpc", Integer.valueOf(bpc)); 
+			image.put("f", "FlateDecode"); 
+			image.put("parms", parms); 
+			image.put("pal", pal); 
+			image.put("trns", trns); 
+			image.put("data", data); 
+			image.put("i", Integer.valueOf(this.images.size() + 1)); 
+			return image;
+		}
+	}
+	
+	/** Parse a PNG file with an alpha channel */
+	protected Map<String, Object> _parsepngWithAlpha(String fileName, byte[] data) throws IOException {
+		BufferedImage img = ImageIO.read(new ByteArrayInputStream(data));
+		int width = img.getWidth();
+		int height = img.getHeight();
+		
+		// PNG files with alpha channel can only have 8 or 16 bit depth
+		// we can't handle 16 bits, so that leaves a byte. we only need grayscale for the mask image
+		
+		int[] imgPx = img.getRGB(0, 0, width, height, null, 0, width);
+		int[] maskPx = new int[width*height];
+		
+		// Split alpha channel off into a grayscale image
+		for (int i = 0; i < imgPx.length; i++) {
+			int a = (imgPx[i] >> 24) & 0xFF; // AARRGGBB -> XXXXXXAA -> 000000AA;
+			maskPx[i] = a | a << 8 | a << 16; // 000000AA | 0000AA00 | 00AA0000 -> 00AAAAAA
+			imgPx[i] = imgPx[i] & 0x00FFFFFF; // AARRGGBB -> 00RRGGBB
+		}
+		
+		// out contains the original image, stripped of the alpha channel
+		BufferedImage out = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		out.setRGB(0, 0, width, height, imgPx, 0, width);
+		
+		// mask contains the grayscale-converted alpha channel of the original image
+		BufferedImage mask = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+		mask.setRGB(0, 0, width, height, maskPx, 0, width);
+		
+		// attempt to re-parse the image, but without the alpha channel
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ImageIO.write(out, "png", baos);
+		Map<String, Object> info = _parsepng(fileName, baos.toByteArray());
+		
+		// attach the alpha mask to the image info for use later on
+		baos.reset();
+		ImageIO.write(mask, "png", baos);
+		info.put("alphaMask", baos.toByteArray());
+		return info;
+	}
     protected void _putcatalog() {
         this._out("/Type /Catalog"); //$NON-NLS-1$
         this._out("/Pages 1 0 R"); //$NON-NLS-1$
@@ -858,114 +946,134 @@ public abstract class FPDF {
         this._out("%PDF-" + this.pdfVersion); //$NON-NLS-1$
     }
 
-    protected void _putimages() {
-        final String filter = (this.compress) ? "/Filter /FlateDecode " : ""; //$NON-NLS-1$//$NON-NLS-2$
-        // while(list(file,info)=each(this.images))
-        for (final String file : this.images.keySet()) {
+	protected void _putimages() {
+          String filter = (this.compress) ? "/Filter /FlateDecode " : ""; 
+          // Yikes, this.images: Map<String, Map<String, Object>>
+          Iterator<Entry<String, Map<String, Object>>> it = this.images.entrySet().iterator();
+          while (it.hasNext()) {
+            Map.Entry<String, Map<String, Object>> imageEntry = it.next();
+            Map<String, Object> image = imageEntry.getValue();
+            // Have to call _newobj() before other stuff.  this.n gets incremented in here
             this._newobj();
-            this.images.get(file).put("n", Integer.valueOf(this.n)); //$NON-NLS-1$
-            this._out("<</Type /XObject"); //$NON-NLS-1$
-            this._out("/Subtype /Image"); //$NON-NLS-1$
-            this._out("/Width " //$NON-NLS-1$
-                    + this.images.get(file).get("w")); //$NON-NLS-1$
-            this._out("/Height " //$NON-NLS-1$
-                    + this.images.get(file).get("h")); //$NON-NLS-1$
-            if (this.images.get(file).get("cs") == "Indexed") {
-                this._out("/ColorSpace [/Indexed /DeviceRGB " + (((byte[]) this.images.get(file).get("pal")).length / 3 - 1) + " " + (this.n + 1) + " 0 R]");
+            // Don't miss this, we set the image order in here.  If this doesn't get set 
+            // weird stuff will happen later on such as corrupted PDFs.  Also note that it
+            // needs updated in the underlying Map or it will be missing later on _putresources happens
+            image.put("n", this.n);
+            this._out("<</Type /XObject");
+            this._out("/Subtype /Image");
+            this._out("/Width " + image.get("w"));
+            this._out("/Height " + image.get("h"));
+            // 
+            if (images.containsKey("alphaMask")) {
+              this._out("/SMask " + image.get("n") + " 0 R");
+            }
+            // 
+            if (image.get("cs") == "Indexed") {
+              // This used to be (this.n + 1) instead of just image.get("n").  Not really sure if this will cause problems
+              // but the old way didn't make much sense to me.  Cross that bridge when we get there I suppose.
+              this._out("/ColorSpace [/Indexed /DeviceRGB " + (((byte[]) image.get("pal")).length / 3 - 1) + " " + image.get("n") + " 0 R]");
             } else {
-                this._out("/ColorSpace /" + this.images.get(file).get("cs"));
-                if (this.images.get(file).get("cs") == "DeviceCMYK") {
-                    this._out("/Decode [1 0 1 0 1 0 1 0]");
-                }
+              this._out("/ColorSpace /" + image.get("cs"));
+              if (image.get("cs") == "DeviceCMYK") {
+                this._out("/Decode [1 0 1 0 1 0 1 0]");
+              }
             }
-            this._out("/BitsPerComponent " + this.images.get(file).get("bpc"));
-            if (this.images.get(file).get("f") != null) {
-                this._out("/Filter /" + this.images.get(file).get("f"));
+            // 
+            this._out("/BitsPerComponent " + image.get("bpc"));
+            if (image.get("f") != null) {
+              this._out("/Filter /" + image.get("f"));
             }
-            if (this.images.get(file).get("parms") != null) {
-                this._out((String) this.images.get(file).get("parms"));
+            if (image.get("parms") != null) {
+              this._out((String) image.get("parms"));
             }
-            if (this.images.get(file).get("trns") != null) {
-                final byte[] trnsarr = ((byte[]) this.images.get(file).get("trns"));
-                final StringBuilder trns = new StringBuilder();
-                trns.append("/Mask [ "); //$NON-NLS-1$
-                for (int i = 0; i < trnsarr.length; i++) {
-                    trns.append(_stringify(trnsarr));
-                }
-                trns.append(']');
-                this._out(trns.toString());
+            if (image.get("trns") != null) {
+              byte[] trnsarr = ((byte[]) image.get("trns"));
+              StringBuilder trns = new StringBuilder();
+              trns.append("/Mask [ "); 
+              for (int i = 0; i < trnsarr.length; i++) {
+                trns.append(_stringify(trnsarr));
+              }
+              trns.append(']');
+              this._out(trns.toString());
             }
-            this._out("/Length " + ((byte[]) (this.images.get(file).get("data"))).length + ">>");
+            this._out("/Length " + ((byte[]) (image.get("data"))).length + ">>");
             try {
-                this._putstream(new String((byte[]) this.images.get(file).get("data"), "ISO-8859-1")); //$NON-NLS-1$ //$NON-NLS-2$
-            } catch (final UnsupportedEncodingException e) {
-                this._putstream(new String((byte[]) this.images.get(file).get("data"))); //$NON-NLS-1$
+              this._putstream(new String((byte[]) image.get("data"), "ISO-8859-1"));  
+            } catch (UnsupportedEncodingException e) {
+              this._putstream(new String((byte[]) image.get("data"))); 
             }
-            this.images.get(file).put("data", null);
+            image.put("data", null);
             this._out("endobj");
             // Palette
-            if (this.images.get(file).get("cs") == "Indexed") {
-                this._newobj();
-                // pal=(this.compress) ? gzcompress(info["pal"]) : info["pal"];
-                final byte[] pal = (byte[]) this.images.get(file).get("pal");
-                this._out("<<" + filter + "/Length " + pal.length + ">>");
-                try {
-                    this._putstream(new String(pal, "ISO-8859-1")); //$NON-NLS-1$ //$NON-NLS-2$
-                } catch (final UnsupportedEncodingException e) {
-                    this._putstream(new String(pal)); // $NON-NLS-1$
-                }
-                this._out("endobj");
+            if (image.get("cs") == "Indexed") {
+              this._newobj();
+              byte[] pal = (byte[]) image.get("pal");
+              pal = (this.compress) ? gzcompress(pal) : pal;
+              this._out("<<" + filter + "/Length " + pal.length + ">>");
+              try {
+                this._putstream(new String(pal, "ISO-8859-1"));  
+              } catch (UnsupportedEncodingException e) {
+                this._putstream(new String(pal)); 
+              }
+              this._out("endobj");
             }
-        }
-    }
+            // Set object back into underlying data structure so any changes are
+            // available elsewhere in future processing logic 
+            imageEntry.setValue(image);
+          }
+	}
 
-    protected void _putinfo() {
-        this._out("/Producer " //$NON-NLS-1$
-                + this._textstring("Java FPDF 1.53." //$NON-NLS-1$
-                + revision));
-        if (this.title != null) {
-            this._out("/Title " + this._textstring(this.title)); //$NON-NLS-1$
-        }
-        if (this.subject != null) {
-            this._out("/Subject " + this._textstring(this.subject)); //$NON-NLS-1$
-        }
-        if (this.author != null) {
-            this._out("/Author " + this._textstring(this.author)); //$NON-NLS-1$
-        }
-        if (this.keywords != null) {
-            this._out("/Keywords " + this._textstring(this.keywords)); //$NON-NLS-1$
-        }
-        if (this.creator != null) {
-            this._out("/Creator " + this._textstring(this.creator)); //$NON-NLS-1$
-        }
-        final Calendar cal = Calendar.getInstance();
-        final StringBuilder sb = new StringBuilder();
-        sb.append("/CreationDate (D:"); //$NON-NLS-1$
-        sb.append(cal.get(Calendar.YEAR));
-        if (cal.get(Calendar.MONTH) < 9) {
-            sb.append('0');
-        }
-        sb.append(cal.get(Calendar.MONTH) + 1);
-        if (cal.get(Calendar.DATE) < 10) {
-            sb.append('0');
-        }
-        sb.append(cal.get(Calendar.DATE));
-        if (cal.get(Calendar.HOUR_OF_DAY) < 10) {
-            sb.append('0');
-        }
-        sb.append(cal.get(Calendar.HOUR_OF_DAY));
-        if (cal.get(Calendar.MINUTE) < 10) {
-            sb.append('0');
-        }
-        sb.append(cal.get(Calendar.MINUTE));
-        if (cal.get(Calendar.SECOND) < 10) {
-            sb.append('0');
-        }
-        sb.append(cal.get(Calendar.SECOND));
-        sb.append(')');
-        this._out(sb.toString());
-        sb.delete(0, sb.length());
-    }
+	private byte[] gzcompress(byte[] pal) {
+		return Compressor.compress(pal);
+	}
+
+	protected void _putinfo() {
+		this._out("/Producer " 
+				+ this._textstring("Java FPDF 1.53 / " 
+						+ revision));
+		if (this.title != null) {
+			this._out("/Title " + this._textstring(this.title)); 
+		}
+		if (this.subject != null) {
+			this._out("/Subject " + this._textstring(this.subject)); 
+		}
+		if (this.author != null) {
+			this._out("/Author " + this._textstring(this.author)); 
+		}
+		if (this.keywords != null) {
+			this._out("/Keywords " + this._textstring(this.keywords)); 
+		}
+		if (this.creator != null) {
+			this._out("/Creator " + this._textstring(this.creator)); 
+		}
+		Calendar cal = Calendar.getInstance();
+		StringBuilder sb = new StringBuilder();
+		sb.append("/CreationDate (D:"); 
+		sb.append(cal.get(Calendar.YEAR));
+		if (cal.get(Calendar.MONTH) < 9) {
+			sb.append('0');
+		}
+		sb.append(cal.get(Calendar.MONTH) + 1);
+		if (cal.get(Calendar.DATE) < 10) {
+			sb.append('0');
+		}
+		sb.append(cal.get(Calendar.DATE));
+		if (cal.get(Calendar.HOUR_OF_DAY) < 10) {
+			sb.append('0');
+		}
+		sb.append(cal.get(Calendar.HOUR_OF_DAY));
+		if (cal.get(Calendar.MINUTE) < 10) {
+			sb.append('0');
+		}
+		sb.append(cal.get(Calendar.MINUTE));
+		if (cal.get(Calendar.SECOND) < 10) {
+			sb.append('0');
+		}
+		sb.append(cal.get(Calendar.SECOND));
+		sb.append(')');
+		this._out(sb.toString());
+		sb.delete(0, sb.length());
+	}
 
     protected static String _stringify(final byte[] bytes) {
         final StringBuilder sb = new StringBuilder();
@@ -1055,9 +1163,8 @@ public abstract class FPDF {
             this._out("endobj"); //$NON-NLS-1$
             // Page content
             // FIXME implement gz compression
-            // String p = (this.compress) ? gzcompress(this.pages.get(n))
-            // : this.pages.get(n);
-            final String p = _stringify(this.pages.get(n));
+            String p = (this.compress) ? _stringifyzip(gzcompress(this.pages.get(n))) : _stringify(this.pages.get(n));
+            // final String p = _stringify(this.pages.get(n));
             this._newobj();
             this._out("<<" + filter + "/Length " //$NON-NLS-1$//$NON-NLS-2$
                     + p.length() + ">>"); //$NON-NLS-1$
@@ -1083,24 +1190,49 @@ public abstract class FPDF {
         this._out("endobj"); //$NON-NLS-1$
     }
 
-    protected void _putresourcedict() {
-        this._out("/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]"); //$NON-NLS-1$
-        this._out("/Font <<"); //$NON-NLS-1$
-        final StringBuilder s = new StringBuilder();
-        for (final Font font : this.fonts.values()) {
-            s.append("/F"); //$NON-NLS-1$
-            s.append(font.getI());
-            s.append(' ');
-            s.append(font.getN());
-            s.append(" 0 R"); //$NON-NLS-1$
-            this._out(s.toString());
-            s.delete(0, s.length());
-        }
-        this._out(">>"); //$NON-NLS-1$
-        this._out("/XObject <<"); //$NON-NLS-1$
-        this._putxobjectdict();
-        this._out(">>"); //$NON-NLS-1$
-    }
+	private String _stringifyzip(byte[] buffer) {
+		try {
+			return new String(buffer, "ISO-8859-1");
+		} catch (UnsupportedEncodingException e) {
+		}
+		return null;
+	}
+
+	private byte[] gzcompress(List<byte[]> buffer) {
+		int length = 0;
+		for (byte[] b : buffer) {
+			length += b.length;
+		}
+		byte[] bytes = new byte[length];
+		int offset = 0;
+		for (byte[] b : buffer) {
+			for (int i = 0; i < b.length; i++) {
+				bytes[offset + i] = b[i];
+			}
+			offset += b.length;
+		}
+		byte[] result = gzcompress(bytes);
+		return result;
+	}
+
+	protected void _putresourcedict() {
+		this._out("/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]"); 
+		this._out("/Font <<"); 
+		StringBuilder s = new StringBuilder();
+		for (Font font : this.fonts.values()) {
+			s.append("/F"); 
+			s.append(font.getI());
+			s.append(' ');
+			s.append(font.getN());
+			s.append(" 0 R"); 
+			this._out(s.toString());
+			s.delete(0, s.length());
+		}
+		this._out(">>"); 
+		this._out("/XObject <<"); 
+		this._putxobjectdict();
+		this._out(">>"); 
+	}
 
     protected void _putresources() {
         this._putfonts(); // FIXME no support for embedded fonts
@@ -1181,11 +1313,10 @@ public abstract class FPDF {
      * @throws IOException if the default font can not be loaded.
      */
     public void addPage(final Orientation orientation) throws IOException {
-        if (this.state == 0) {
+        if (this.state == PDFCreationState.NONE) {
             this.open();
         }
         final String family = this.fontFamily;
-        final StringBuilder sb = new StringBuilder();
         final Set<FontStyle> style = this.fontStyle;
         final float size = this.fontSizePt;
         final float lw = this.lineWidth;
@@ -1388,9 +1519,11 @@ public abstract class FPDF {
             } else {
                 op = 'S';
             }
-            s.append(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re %s ", //$NON-NLS-1$
-                    Float.valueOf(this.x * k), Float.valueOf((this.h - this.y) * k), Float.valueOf(w1 * k), Float.valueOf(-h * k), Float.valueOf(op)));
-        }
+            s.append(String.format(Locale.ENGLISH,
+					"%.2f %.2f %.2f %.2f re %s ", 
+					Float.valueOf(this.x * k), Float.valueOf((this.h - this.y) * k), Float.valueOf(w1 * k),
+					Float.valueOf(-h * k), op));        
+		}
         if (border != null) {
             x = this.x;
             y = this.y;
@@ -1647,7 +1780,7 @@ public abstract class FPDF {
      * @throws IOException if the default font can not be loaded.
      */
     public void close() throws IOException {
-        if (this.state == 3) {
+        if (this.state == PDFCreationState.FINISHED) {
             return;
         }
         if (this.page == 0) {
@@ -1719,53 +1852,95 @@ public abstract class FPDF {
      * @param link   link identifier for the image
      * @throws IOException
      */
-    public void Image(final String file, final Coordinate coords, final float w, final float h, final ImageType type, final int link) throws IOException {
-        Map<String, Object> info = null;
-        if (this.images.get(file) == null) {
-            // First use of image, get info
-            ImageType type1;
-            if (type == null) {
-                final int pos = file.indexOf('.');
-                if (pos == -1) {
-                    throw new IOException("Image file has no extension and no type was specified: " //$NON-NLS-1$
-                            + file);
-                }
-                type1 = ImageType.valueOf(file.substring(pos + 1).toUpperCase());
-            } else {
-                type1 = type;
-            }
-            if (ImageType.PNG.equals(type1)) {
-                info = this._parsepng(new File(file));
-            } else if (ImageType.JPEG.equals(type1)) {
-                info = this._parsejpg(new File(file));
-            } else {
-                throw new IOException("Image type not supported."); //$NON-NLS-1$
-            }
-            // FIXME no support for other formats
-            this.images.put(file, info);
-        } else {
-            info = this.images.get(file);
-        }
-        // Automatic width and height calculation if needed
-        float w1 = w;
-        float h1 = h;
-        if ((w == 0) && (h == 0)) {
-            // Put image at 72 dpi
-            w1 = ((Integer) info.get("w")).floatValue() / this.k; //$NON-NLS-1$
-            h1 = ((Integer) info.get("h")).floatValue() / this.k; //$NON-NLS-1$
-        } else if (w == 0) {
-            w1 = h * ((Integer) info.get("w")).floatValue() //$NON-NLS-1$
-                    / ((Integer) info.get("h")).floatValue(); //$NON-NLS-1$
-        } else if (h == 0) {
-            h1 = w * ((Integer) info.get("h")).floatValue() //$NON-NLS-1$
-                    / ((Integer) info.get("w")).floatValue(); //$NON-NLS-1$
-        }
-        this._out(String.format(Locale.ENGLISH, "q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q", //$NON-NLS-1$
-                Float.valueOf(w1 * this.k), Float.valueOf(h1 * this.k), Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - (coords.getY() + h1)) * this.k), info.get("i"))); //$NON-NLS-1$
-        if (link > 0) {
-            this.Link(coords.getX(), coords.getY(), w1, h1, link);
-        }
-    }
+	public void Image(final String file, final Coordinate coords, final float w, final float h, final ImageType type,
+			final int link) throws IOException {
+		File f = new File(file);
+		Image(file, Files.readAllBytes(f.toPath()), coords, w, h, type, link, false);
+	}
+	
+	@SuppressWarnings("fallthrough")
+	protected void Image(final String file, byte[] data, Coordinate coords, final float w, final float h, final ImageType type,
+			final int link, boolean isMask) throws IOException {
+		Map<String, Object> info = null;
+		if (this.images.get(file) == null) {
+			// First use of image, get info
+			ImageType type1;
+			if (type == null) {
+				int pos = file.indexOf('.');
+				if (pos == -1) {
+					throw new IOException("Image file has no extension and no type was specified: " 
+							+ file);
+				}
+				type1 = ImageType.valueOf(file.substring(pos + 1).toUpperCase());
+			} else {
+				type1 = type;
+			}
+			
+			switch (type1) {
+				case GIF:
+					// gifs: convert to png first
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					ImageIO.write(ImageIO.read(new ByteArrayInputStream(data)), "png", baos);
+					data = baos.toByteArray();
+					// fallthrough!
+				case PNG:
+					info = this._parsepng(file, data);
+					break;
+				case JPEG:
+					info = this._parsejpg(file, data);
+					break;
+				default:
+					throw new IOException("Image type not supported.");
+			}
+			// FIXME no support for other formats
+			this.images.put(file, info);
+		} else {
+			info = this.images.get(file);
+		}
+		
+		// masks are grayscale, regardless of what it claims
+		if (isMask) {
+			info.put("cs", "DeviceGray");
+		}
+		
+		// Automatic width and height calculation if needed
+		float w1 = w;
+		float h1 = h;
+		if ((w == 0) && (h == 0)) {
+			// Put image at 72 dpi
+			w1 = ((Integer) info.get("w")).floatValue() / this.k; 
+			h1 = ((Integer) info.get("h")).floatValue() / this.k; 
+		} else if (w == 0) {
+			w1 = h * ((Integer) info.get("w")).floatValue() 
+					/ ((Integer) info.get("h")).floatValue(); 
+		} else if (h == 0) {
+			h1 = w * ((Integer) info.get("h")).floatValue() 
+					/ ((Integer) info.get("w")).floatValue(); 
+		}
+		
+		// position the mask off the page so it can't be seen
+		if (isMask) {
+			coords = new Coordinate(
+			  (this.currentOrientation == Orientation.PORTRAIT ? this.fwPt : this.fhPt) + 10,
+				coords.getY()
+			);
+		}
+		
+		this._out(String.format(Locale.ENGLISH,
+				"q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q", 
+				Float.valueOf(w1 * this.k), Float.valueOf(h1 * this.k), Float.valueOf(coords.getX() * this.k),
+				Float.valueOf((this.h - (coords.getY() + h1)) * this.k), info.get("i"))); 
+		if (link > 0) {
+			this.Link(coords.getX(), coords.getY(), w1, h1, link);
+		}
+                
+                // if the image has an alpha mask, add it separately
+                // Also note, the alphaMask must be applied AFTER the call to _out()
+                // otherwise you'll get corrupted PDFs and be really confused
+		if (info.containsKey("alphaMask")) {
+			this.Image("alphaMask-" + file, (byte[])info.get("alphaMask"), new Coordinate(0, 0), 0, 0, ImageType.PNG, 0, true);
+		}
+	}
 
     /**
      * Sets the line style.
@@ -1832,12 +2007,11 @@ public abstract class FPDF {
         this.y += this.lastH;
     }
 
-    /**
-     * Line feed; default value is last cell height
-     */
-    public void Ln(final float h) {
-        this.y += h;
-    }
+	/** Line feed; default value is last cell height */
+	public void Ln(final float h) {
+		this.y += h;
+		this.x = this.lMargin;
+	}
 
     /**
      * Output text with automatic or explicit line breaks.
@@ -1851,156 +2025,153 @@ public abstract class FPDF {
         this.MultiCell(w, h, txt, null, null, false);
     }
 
-    /**
-     * Output text with automatic or explicit line breaks.
-     *
-     * @throws IOException if the default font can not be loaded.
-     */
-    public void MultiCell(final float w, final float h, final String txt, final Borders border, final Alignment align, final boolean fill) throws IOException {
-        final float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
-        final Charwidths cw = this.currentFont.getCw();
-        final float wmax = (w1 - 2 * this.cMargin) * 1000 / this.fontSize;
-        final String s = (txt == null) ? "" : txt.replace("\r", ""); //$NON-NLS-1$//$NON-NLS-2$
-        int nb = s.length();
-        if ((nb > 0) && (s.charAt(nb - 1) == '\n')) {
-            nb--;
-        }
-        Borders b = null;
-        Borders b2 = null;
-        if (border != null) {
-            if (border.getAll()) {
-                b = new Borders(true, true, true, false);
-                b2 = new Borders(true, false, true, false);
-            } else {
-                b = new Borders(border.getLeft(), border.getTop(), border.getRight(), false);
-                b2 = new Borders(border.getLeft(), false, border.getRight(), false);
-            }
-        }
-        int sep = -1;
-        int i = 0;
-        int j = 0;
-        int l = 0;
-        int ls = 0;
-        int ns = 0;
-        int nl = 1;
-        while (i < nb) {
-            // Get next character
-            final char c = s.charAt(i);
-            if (c == '\n') {
-                // Explicit line break
-                if (this.ws > 0) {
-                    this.ws = 0;
-                    this._out("0 Tw"); //$NON-NLS-1$
-                }
-                this.Cell(w1, h, s.substring(j, i), b, Position.BELOW, align, fill, 0);
-                i++;
-                sep = -1;
-                j = i;
-                l = 0;
-                ns = 0;
-                nl++;
-                if ((border != null) && (nl == 2)) {
-                    b = b2;
-                }
-                continue;
-            }
-            if (c == ' ') {
-                sep = i;
-                ls = l;
-                ns++;
-            }
-            l += cw.get(c);
-            if (l > wmax) {
-                // Automatic line break
-                if (sep == -1) {
-                    if (i == j) {
-                        i++;
-                    }
-                    if (this.ws > 0) {
-                        this.ws = 0;
-                        this._out("0 Tw"); //$NON-NLS-1$
-                    }
-                    this.Cell(w1, h, s.substring(j, i), b, Position.BELOW, align, fill, 0);
-                } else {
-                    if ((align == null) || Alignment.JUSTIFIED.equals(align)) {
-                        this.ws = (ns > 1) ? (wmax - ls) / 1000 * this.fontSize / (ns - 1) : 0;
-                        this._out(String.format(Locale.ENGLISH, "%.3f Tw", //$NON-NLS-1$
-                                this.ws * this.k));
-                    }
-                    this.Cell(w1, h, s.substring(j, sep), b, Position.BELOW, align, fill, 0);
-                    i = sep + 1;
-                }
-                sep = -1;
-                j = i;
-                l = 0;
-                ns = 0;
-                nl++;
-                if ((border != null) && (nl == 2)) {
-                    b = b2;
-                }
-            } else {
-                i++;
-            }
-        }
-        // Last chunk
-        if (this.ws > 0) {
-            this.ws = 0;
-            this._out("0 Tw"); //$NON-NLS-1$
-        }
-        if ((border != null) && border.getBottom()) {
-            b = new Borders(b.getLeft(), b.getTop(), b.getRight(), true);
-        }
-        this.Cell(w1, h, s.substring(j, i), b, Position.BELOW, align, fill, 0);
-        this.x = this.lMargin;
-    }
+	/**
+	 * Output text with automatic or explicit line breaks.
+	 * 
+	 * @throws IOException
+	 *             if the default font can not be loaded.
+	 */
+	public void MultiCell(final float w, final float h, final String txt, final Borders border, final Alignment align,
+			final boolean fill) throws IOException {
+		float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
+		Charwidths cw = this.currentFont.getCw();
+		float wmax = (w1 - 2 * this.cMargin) * 1000 / this.fontSize;
+		String s = txt.replace("\r", ""); 
+		int nb = s.length();
+		if ((nb > 0) && (s.charAt(nb - 1) == '\n')) {
+			nb--;
+		}
+		Borders b = null;
+		Borders b2 = null;
+		if (border != null) {
+			if (border.getAll()) {
+				b = new Borders(true, true, true, false);
+				b2 = new Borders(true, false, true, false);
+			} else {
+				b = new Borders(border.getLeft(), border.getTop(), border.getRight(), false);
+				b2 = new Borders(border.getLeft(), false, border.getRight(), false);
+			}
+		}
+		int sep = -1;
+		int i = 0;
+		int j = 0;
+		int l = 0;
+		int ls = 0;
+		int ns = 0;
+		int nl = 1;
+		while (i < nb) {
+			// Get next character
+			char c = s.charAt(i);
+			if (c == '\n') {
+				// Explicit line break
+				if (this.ws > 0) {
+					this.ws = 0;
+					this._out("0 Tw"); 
+				}
+				this.Cell(w1, h, s.substring(j, i), b, Position.BELOW, align, fill, 0);
+				i++;
+				sep = -1;
+				j = i;
+				l = 0;
+				ns = 0;
+				nl++;
+				if ((border != null) && (nl == 2)) {
+					b = b2;
+				}
+				continue;
+			}
+			if (c == ' ') {
+				sep = i;
+				ls = l;
+				ns++;
+			}
+			l += cw.get(c);
+			if (l > wmax) {
+				// Automatic line break
+				if (sep == -1) {
+					if (i == j) {
+						i++;
+					}
+					if (this.ws > 0) {
+						this.ws = 0;
+						this._out("0 Tw"); 
+					}
+					this.Cell(w1, h, s.substring(j, i), b, Position.BELOW, align, fill, 0);
+				} else {
+					if ((align == null) || Alignment.JUSTIFIED.equals(align)) {
+						this.ws = (ns > 1) ? (wmax - ls) / 1000 * this.fontSize / (ns - 1) : 0;
+						this._out(String.format(Locale.ENGLISH, "%.3f Tw", 
+								this.ws * this.k));
+					}
+					this.Cell(w1, h, s.substring(j, sep), b, Position.BELOW, align, fill, 0);
+					i = sep + 1;
+				}
+				sep = -1;
+				j = i;
+				l = 0;
+				ns = 0;
+				nl++;
+				if ((border != null) && (nl == 2)) {
+					b = b2;
+				}
+			} else {
+				i++;
+			}
+		}
+		// Last chunk
+		if (this.ws > 0) {
+			this.ws = 0;
+			this._out("0 Tw"); 
+		}
+		if ((border != null) && border.getBottom()) {
+			b = new Borders(b.getLeft(), b.getTop(), b.getRight(), true);
+		}
+		this.Cell(w1, h, s.substring(j, i), b, Position.BELOW, align, fill, 0);
+		this.x = this.lMargin;
+	}
 
-    /**
-     * Begin document
-     */
-    public void open() {
-        this.state = 1;
-    }
+	/** Begin document */
+	public void open() {
+		this.state = PDFCreationState.OPENED;
+	}
 
-    /**
-     * Output PDF as String
-     *
-     * @throws IOException if the default font can not be loaded.
-     */
-    public String output() throws IOException {
-        // Finish document if necessary
-        if (this.state < 3) {
-            this.close();
-        }
-        return _stringify(this.buffer);
-    }
+	/**
+	 * Output PDF as String
+	 * 
+	 * @throws IOException
+	 *             if the default font can not be loaded.
+	 */
+	public String output() throws IOException {
+		// Finish document if necessary
+		if (this.state != PDFCreationState.FINISHED) {
+			this.close();
+		}
+		return _stringify(this.buffer);
+	}
 
-    /**
-     * Output PDF to local file
-     */
-    public void output(final File file) throws IOException {
-        // Finish document if necessary
-        if (this.state < 3) {
-            this.close();
-        }
-        final OutputStream out = new FileOutputStream(file);
-        for (final byte[] bytes : this.buffer) {
-            out.write(bytes);
-        }
-        out.close();
-    }
+	/** Output PDF to local file */
+	public void output(final File file) throws IOException {
+		// Finish document if necessary
+		if (this.state != PDFCreationState.FINISHED) {
+			this.close();
+		}
+		OutputStream out = new FileOutputStream(file);
+		for (byte[] bytes : this.buffer) {
+			out.write(bytes);
+		}
+		out.close();
+	}
 
-    /**
-     * Output PDF to stream
-     */
-    public void output(final OutputStream out) throws IOException {
-        // Finish document if necessary
-        if (this.state < 3) {
-            this.close();
-        }
-        for (final byte[] bytes : this.buffer) {
-            out.write(bytes);
-        }
-    }
+	/** Output PDF to stream */
+	public void output(final OutputStream out) throws IOException {
+		// Finish document if necessary
+		if (this.state != PDFCreationState.FINISHED) {
+			this.close();
+		}
+		for (byte[] bytes : this.buffer) {
+			out.write(bytes);
+		}
+	}
 
     /**
      * Gets the current page number.
@@ -2011,20 +2182,26 @@ public abstract class FPDF {
         return this.page;
     }
 
-    /**
-     * Draws a rectangle.
-     *
-     * @param coords the starting coordinates
-     * @param w      the width
-     * @param h      the height
-     * @param mode   the drawing mode
-     */
-    public void Rect(final Coordinate coords, final float w, final float h, final DrawMode mode) {
-        if (mode != null) {
-            this._out(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f re %s", //$NON-NLS-1$
-                    Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - coords.getY()) * this.k), Float.valueOf(w * this.k), Float.valueOf(-h * this.k), mode.getOp()));
-        }
-    }
+	/**
+	 * Draws a rectangle.
+	 * 
+	 * @param coords
+	 *            the starting coordinates
+	 * @param w
+	 *            the width
+	 * @param h
+	 *            the height
+	 * @param mode
+	 *            the drawing mode
+	 */
+	public void Rect(final Coordinate coords, final float w, float h, final DrawMode mode) {
+		if (mode != null) {
+			this._out(String.format(Locale.ENGLISH,
+					"%.2f %.2f %.2f %.2f re %s", 
+					Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - coords.getY()) * this.k),
+					Float.valueOf(w * this.k), Float.valueOf(-h * this.k), mode.getOp()));
+		}
+	}
 
     /**
      * Draws a bezier curve.
@@ -2218,38 +2395,44 @@ public abstract class FPDF {
         this.Polygon(p, mode);
     }
 
-    /**
-     * Draws a rounded rectangle.
-     *
-     * @param coords the base coordinates.
-     * @param w      the width
-     * @param h      the height
-     * @param r      the corner radius
-     * @param mode   the drawing mode
-     */
-    public void RoundedRect(final Coordinate coords, final float w, final float h, final float r, final DrawMode mode) {
-        if (mode != null) {
-            final double myArc = 4 / 3 * (Math.sqrt(2) - 1);
-            this._Point(new Coordinate(coords.getX() + r, coords.getY()));
-            float xc = coords.getX() + w - r;
-            float yc = coords.getY() + r;
-            this._Line(new Coordinate(xc, coords.getY()));
-            this._Curve(new Coordinate(xc + (r * myArc), yc - r), new Coordinate(xc + r, yc - (r * myArc)), new Coordinate(xc + r, yc));
-            xc = xc;
-            yc = coords.getY() + h - r;
-            this._Line(new Coordinate(coords.getX() + w, yc));
-            this._Curve(new Coordinate(xc + r, yc + (r * myArc)), new Coordinate(xc + (r * myArc), yc + r), new Coordinate(xc, yc + r));
-            xc = coords.getX() + r;
-            yc = yc;
-            this._Line(new Coordinate(xc, coords.getY() + h));
-            this._Curve(new Coordinate(xc - (r * myArc), yc + r), new Coordinate(xc - r, yc + (r * myArc)), new Coordinate(xc - r, yc));
-            xc = xc;
-            yc = coords.getY() + r;
-            this._Line(new Coordinate(coords.getX(), yc));
-            this._Curve(new Coordinate(xc - r, yc - (r * myArc)), new Coordinate(xc - (r * myArc), yc - r), new Coordinate(xc, yc - r));
-            this._out(String.valueOf(mode.getOp()));
-        }
-    }
+	/**
+	 * Draws a rounded rectangle.
+	 * 
+	 * @param coords
+	 *            the base coordinates.
+	 * @param w
+	 *            the width
+	 * @param h
+	 *            the height
+	 * @param r
+	 *            the corner radius
+	 * @param mode
+	 *            the drawing mode
+	 */
+	public void RoundedRect(final Coordinate coords, final float w, final float h, final float r, final DrawMode mode) {
+		if (mode != null) {
+			double myArc = 4 / 3 * (Math.sqrt(2) - 1);
+			this._Point(new Coordinate(coords.getX() + r, coords.getY()));
+			float xc = coords.getX() + w - r;
+			float yc = coords.getY() + r;
+			this._Line(new Coordinate(xc, coords.getY()));
+			this._Curve(new Coordinate(xc + (r * myArc), yc - r), new Coordinate(xc + r, yc - (r * myArc)),
+					new Coordinate(xc + r, yc));
+			yc = coords.getY() + h - r;
+			this._Line(new Coordinate(coords.getX() + w, yc));
+			this._Curve(new Coordinate(xc + r, yc + (r * myArc)), new Coordinate(xc + (r * myArc), yc + r),
+					new Coordinate(xc, yc + r));
+			xc = coords.getX() + r;
+			this._Line(new Coordinate(xc, coords.getY() + h));
+			this._Curve(new Coordinate(xc - (r * myArc), yc + r), new Coordinate(xc - r, yc + (r * myArc)),
+					new Coordinate(xc - r, yc));
+			yc = coords.getY() + r;
+			this._Line(new Coordinate(coords.getX(), yc));
+			this._Curve(new Coordinate(xc - r, yc - (r * myArc)), new Coordinate(xc - (r * myArc), yc - r),
+					new Coordinate(xc, yc - r));
+			this._out(String.valueOf(mode.getOp()));
+		}
+	}
 
     /**
      * Sets a draw point.
@@ -2271,17 +2454,22 @@ public abstract class FPDF {
                 end.getX() * this.k, (this.h - end.getY()) * this.k));
     }
 
-    /**
-     * Draws a bezier curve from last draw point.
-     *
-     * @param control1 the first control point
-     * @param control2 the second control point
-     * @param end      the end point
-     */
-    protected void _Curve(final Coordinate control1, final Coordinate control2, final Coordinate end) {
-        this._out(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f %.2f %.2f c", //$NON-NLS-1$
-                control1.getX() * this.k, (this.h - control1.getY()) * this.k, control2.getX() * this.k, (this.h - control2.getY()) * this.k, end.getX() * this.k, (this.h - end.getY()) * this.k));
-    }
+	/**
+	 * Draws a bezier curve from last draw point.
+	 * 
+	 * @param control1
+	 *            the first control point
+	 * @param control2
+	 *            the second control point
+	 * @param end
+	 *            the end point
+	 */
+	protected void _Curve(final Coordinate control1, final Coordinate control2, final Coordinate end) {
+		this._out(String.format(Locale.ENGLISH,
+				"%.2f %.2f %.2f %.2f %.2f %.2f c", 
+				control1.getX() * this.k, (this.h - control1.getY()) * this.k, control2.getX() * this.k,
+				(this.h - control2.getY()) * this.k, end.getX() * this.k, (this.h - end.getY()) * this.k));
+	}
 
     /**
      * Author of document
@@ -2306,14 +2494,10 @@ public abstract class FPDF {
         this.pageBreakTrigger = this.h - margin;
     }
 
-    /**
-     * Set page compression
-     */
-    public void setCompression(final boolean compress) {
-	/* FIXME how to handle GZip in Java? */
-        this.compress = compress;
-        throw new NotImplementedException();
-    }
+	/** Set page compression */
+	public void setCompression(final boolean compress) {
+		this.compress = compress;
+	}
 
     /**
      * Creator of document
@@ -2322,19 +2506,16 @@ public abstract class FPDF {
         this.creator = creator;
     }
 
-    /**
-     * Set display mode in viewer
-     */
-    public void setDisplayMode(final Zoom zoom, final Layout layout) {
-	/* FIXME wtf is "!is_string($zoom)" doing here? */
-        if (zoom != null) {
-            this.zoomMode = zoom;
-            this.zoomFactor = 0;
-        }
-        if (layout != null) {
-            this.layoutMode = layout;
-        }
-    }
+	/** Set display mode in viewer */
+	public void setDisplayMode(final Zoom zoom, final Layout layout) {
+		if (zoom != null) {
+			this.zoomMode = zoom;
+			this.zoomFactor = 0;
+		}
+		if (layout != null) {
+			this.layoutMode = layout;
+		}
+	}
 
     /**
      * Set display mode in viewer
@@ -2349,22 +2530,25 @@ public abstract class FPDF {
         }
     }
 
-    /**
-     * Set color for all stroking operations.
-     *
-     * @param color a Color value.
-     */
-    public void setDrawColor(final Color color) {
-        if (color.isGrayscale()) {
-            this.drawColor = String.format(Locale.ENGLISH, "%.3f G", Float.valueOf(color.getV() / 255f)); //$NON-NLS-1$
-        } else {
-            this.drawColor = String.format(Locale.ENGLISH, "%.3f %.3f %.3f RG", //$NON-NLS-1$
-                    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f), Float.valueOf(color.getB() / 255f));
-        }
-        if (this.page > 0) {
-            this._out(this.drawColor);
-        }
-    }
+	/**
+	 * Set color for all stroking operations.
+	 * 
+	 * @param color
+	 *            a Color value.
+	 */
+	public void setDrawColor(final Color color) {
+		if (color.isGrayscale()) {
+			this.drawColor = String.format(Locale.ENGLISH, "%.3f G", Float.valueOf(color.getV() / 255f)); 
+		} else {
+			this.drawColor = String.format(Locale.ENGLISH,
+					"%.3f %.3f %.3f RG", 
+					Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
+					Float.valueOf(color.getB() / 255f));
+		}
+		if (this.page > 0) {
+			this._out(this.drawColor);
+		}
+	}
 
     /**
      * Set color for all stroking operations
@@ -2377,23 +2561,26 @@ public abstract class FPDF {
         this.setDrawColor(new Color(r, g, b));
     }
 
-    /**
-     * Set color for all filling operations
-     *
-     * @param color a Color value
-     */
-    public void setFillColor(final Color color) {
-        if (color.isGrayscale()) {
-            this.fillColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); //$NON-NLS-1$
-        } else {
-            this.fillColor = String.format(Locale.ENGLISH, "%.3f %.3f %.3f rg", //$NON-NLS-1$
-                    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f), Float.valueOf(color.getB() / 255f));
-        }
-        this.colorFlag = (this.fillColor != this.textColor);
-        if (this.page > 0) {
-            this._out(this.fillColor);
-        }
-    }
+	/**
+	 * Set color for all filling operations
+	 * 
+	 * @param color
+	 *            a Color value
+	 */
+	public void setFillColor(final Color color) {
+		if (color.isGrayscale()) {
+			this.fillColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); 
+		} else {
+			this.fillColor = String.format(Locale.ENGLISH,
+					"%.3f %.3f %.3f rg", 
+					Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
+					Float.valueOf(color.getB() / 255f));
+		}
+		this.colorFlag = (this.fillColor != this.textColor);
+		if (this.page > 0) {
+			this._out(this.fillColor);
+		}
+	}
 
     /**
      * Set color for all filling operations
@@ -2435,42 +2622,43 @@ public abstract class FPDF {
             size = this.fontSizePt;
         }
         // Test if font is already selected
-        if (((this.fontFamily != null) && this.fontFamily.equals(family)) && (((this.fontStyle == null) && (style == null)) || ((this.fontStyle != null) && this.fontStyle.equals(style)))
-                && (size == this.fontSizePt)) {
-            return;
-        }
-        // Test if used for the first time
-        final StringBuilder sb = new StringBuilder();
-        sb.append(family);
-        if ((style != null) && style.contains(FontStyle.BOLD)) {
-            sb.append(FontStyle.BOLD.getOp());
-        }
-        if ((style != null) && style.contains(FontStyle.ITALIC)) {
-            sb.append(FontStyle.ITALIC.getOp());
-        }
-        final String fontkey = sb.toString();
-        if (this.fonts.get(fontkey) == null) {
-            // Check if one of the standard fonts
-            if (this.coreFonts.get(fontkey) != null) {
-                final int i = this.fonts.size() + 1;
-                final Font font = new Font(i, Font.Type.CORE, this.coreFonts.get(fontkey), -100, 50, getCharwidths(fontkey));
-                this.fonts.put(fontkey, font);
-            } else {
-                throw new IOException("Undefined font: " //$NON-NLS-1$
-                        + family + " " + style); //$NON-NLS-1$
-            }
-        }
-        // Select it
-        this.fontFamily = family;
-        this.fontStyle = style;
-        this.fontSizePt = size;
-        this.fontSize = size / this.k;
-        this.currentFont = this.fonts.get(fontkey);
-        if (this.page > 0) {
-            this._out(String.format(Locale.ENGLISH, "BT /F%d %.2f Tf ET", //$NON-NLS-1$
-                    this.currentFont.getI(), Float.valueOf(this.fontSizePt)));
-        }
-    }
+		if (((this.fontFamily != null) && this.fontFamily.equals(family))
+				&& (((this.fontStyle == null) && (style == null)) || ((this.fontStyle != null) && this.fontStyle
+						.equals(style))) && (size == this.fontSizePt)) {
+			return;
+		}
+		// Test if used for the first time
+		StringBuilder sb = new StringBuilder();
+		sb.append(family);
+		if ((style != null) && style.contains(FontStyle.BOLD)) {
+			sb.append(FontStyle.BOLD.getOp());
+		}
+		if ((style != null) && style.contains(FontStyle.ITALIC)) {
+			sb.append(FontStyle.ITALIC.getOp());
+		}
+		String fontkey = sb.toString();
+		if (this.fonts.get(fontkey) == null) {
+			// Check if one of the standard fonts
+			if (this.coreFonts.get(fontkey) != null) {
+				int i = this.fonts.size() + 1;
+				Font font = new Font(i, Font.Type.CORE, this.coreFonts.get(fontkey), -100, 50, getCharwidths(fontkey));
+				this.fonts.put(fontkey, font);
+			} else {
+				throw new IOException("Undefined font: " 
+						+ family + " " + style); 
+			}
+		}
+		// Select it
+		this.fontFamily = family;
+		this.fontStyle = style;
+		this.fontSizePt = size;
+		this.fontSize = size / this.k;
+		this.currentFont = this.fonts.get(fontkey);
+		if (this.page > 0) {
+			this._out(String.format(Locale.ENGLISH, "BT /F%d %.2f Tf ET", 
+					this.currentFont.getI(), Float.valueOf(this.fontSizePt)));
+		}
+	}
 
     /**
      * Set font style
@@ -2566,18 +2754,18 @@ public abstract class FPDF {
         this.subject = subject;
     }
 
-    /**
-     * Set color for text
-     */
-    public void setTextColor(final Color color) {
-        if (color.isGrayscale()) {
-            this.textColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); //$NON-NLS-1$
-        } else {
-            this.textColor = String.format(Locale.ENGLISH, "%.3f %.3f %.3f rg", //$NON-NLS-1$
-                    Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f), Float.valueOf(color.getB() / 255f));
-        }
-        this.colorFlag = (this.fillColor != this.textColor);
-    }
+	/** Set color for text */
+	public void setTextColor(final Color color) {
+		if (color.isGrayscale()) {
+			this.textColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); 
+		} else {
+			this.textColor = String.format(Locale.ENGLISH,
+					"%.3f %.3f %.3f rg", 
+					Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
+					Float.valueOf(color.getB() / 255f));
+		}
+		this.colorFlag = (this.fillColor != this.textColor);
+	}
 
     /**
      * Set color for text
@@ -2631,23 +2819,26 @@ public abstract class FPDF {
         }
     }
 
-    /**
-     * Output a string
-     */
-    public void Text(final float x, final float y, final String txt) {
-        final StringBuilder s = new StringBuilder();
-        s.append(String.format(Locale.ENGLISH, "BT %.2f %.2f Td (%s) Tj ET", //$NON-NLS-1$
-                Float.valueOf(x * this.k), Float.valueOf((this.h - y) * this.k), this._escape(txt)));
-        if (this.underline && (txt != null)) {
-            s.append(' ').append(this._dounderline(x, y, txt));
-        }
-        if (this.colorFlag) {
-            s.delete(0, s.length());
-            s.append("q ").append(this.textColor) //$NON-NLS-1$
-                    .append(' ').append(s).append(" Q"); //$NON-NLS-1$
-        }
-        this._out(s.toString());
-    }
+	/** Output a string */
+	public void Text(final float x, final float y, final String txt) {
+		StringBuilder s = new StringBuilder();
+		
+		if (this.colorFlag) {
+			s.append("q ").append(this.textColor).append(' '); 
+		}
+		
+		s.append(String.format("BT %.2f %.2f Td (%s) Tj ET", x * this.k, (this.h - y) * this.k, this._escape(txt)));
+		
+		if (this.underline && (txt != null)) {
+			s.append(' ').append(this._dounderline(x, y, txt));
+		}
+		
+		if (this.colorFlag) {
+			s.append(" Q");
+		}
+		
+		this._out(s.toString());
+	}
 
     /**
      * Output text in flowing mode.

@@ -6,16 +6,8 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.sourceforge.javafpdf.*;
 import org.junit.Test;
-
-import net.sourceforge.javafpdf.Alignment;
-import net.sourceforge.javafpdf.FPDF;
-import net.sourceforge.javafpdf.FontStyle;
-import net.sourceforge.javafpdf.PDFTutorial1;
-import net.sourceforge.javafpdf.PDFTutorial2;
-import net.sourceforge.javafpdf.PDFTutorial3;
-import net.sourceforge.javafpdf.PDFTutorial4;
-import net.sourceforge.javafpdf.Position;
 
 public class Tutorial {
     @Test
@@ -26,6 +18,7 @@ public class Tutorial {
         set.add(FontStyle.BOLD);
         pdf.setFont("Arial", set, 16);
         pdf.Cell(40, 10, "Hello World!");
+        pdf.Cell(60, 10, "Powered by FPDF.",Borders.noBorders(), Position.RIGHTOF , Alignment.CENTER, false, 0);
         final File temp = File.createTempFile("fpdf", ".pdf");
         pdf.output(temp);
         System.out.println(temp.getAbsolutePath());

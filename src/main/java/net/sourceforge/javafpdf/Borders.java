@@ -53,6 +53,13 @@ public class Borders {
         this.bottom = bottom;
     }
 
+    public static Borders noBorders(){
+        return new Borders(false, false, false, false);
+    }
+
+    public static Borders allBorders(){
+        return new Borders();
+    }
     /**
      * Constructor. Creates a Borders object with all borders set.
      */

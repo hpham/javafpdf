@@ -52,7 +52,7 @@ public class PDFTutorial3 extends FPDF {
             setLineWidth(1);
             // Title
 
-            Cell(w, 9, title, new Borders(), Position.NEXTLINE, Alignment.CENTER, true, 0);
+            Cell(w, 9, title, Borders.allBorders(), Position.NEXTLINE, Alignment.CENTER, false, 0);
             Ln(10);
         } catch (final IOException e) {
             // TODO Auto-generated catch block
