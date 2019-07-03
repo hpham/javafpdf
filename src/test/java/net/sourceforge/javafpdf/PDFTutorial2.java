@@ -12,10 +12,19 @@ public class PDFTutorial2 extends FPDF {
 
     @Override
     public void Footer() {
-        // TODO Auto-generated method stub
+        try {
+            // Position at 1.5 cm from bottom
+            setY(-15);
+            final Set<FontStyle> set = new HashSet<FontStyle>();
+            set.add(FontStyle.ITALIC);
+            setFont("Arial", set, 8);
+            Cell(0,10,"Page" + pageNo() + "/{nb}", Position.RIGHTOF,  Alignment.CENTER);
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
 
     }
-    // FIXME Border
+
     @Override
     public void Header() {
         // Logo
@@ -32,7 +41,6 @@ public class PDFTutorial2 extends FPDF {
             // Line break
             Ln(20);
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

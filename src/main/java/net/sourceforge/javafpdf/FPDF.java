@@ -2775,6 +2775,14 @@ public abstract class FPDF {
     }
 
     /**
+     * Set color for text
+     */
+    public void setTextColor(final int rgb) {
+        this.setTextColor(new Color(rgb, rgb, rgb));
+    }
+
+
+    /**
      * Title of document
      */
     public void setTitle(final String title) {

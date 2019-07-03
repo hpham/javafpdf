@@ -18,7 +18,7 @@ public class Tutorial {
         set.add(FontStyle.BOLD);
         pdf.setFont("Arial", set, 16);
         pdf.Cell(40, 10, "Hello World!");
-        pdf.Cell(60, 10, "Powered by FPDF.",Borders.noBorders(), Position.RIGHTOF , Alignment.CENTER, false, 0);
+        //pdf.Cell(60, 10, "Powered by FPDF.",Borders.noBorders(), Position.RIGHTOF , Alignment.CENTER, false, 0);
         final File temp = File.createTempFile("fpdf", ".pdf");
         pdf.output(temp);
         System.out.println(temp.getAbsolutePath());

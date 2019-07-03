@@ -20,15 +20,14 @@ public class PDFTutorial3 extends FPDF {
             // Position at 1.5 cm from bottom
             setY(-15);
             // Arial italic 8
-            final Set<FontStyle> set = new HashSet<FontStyle>();
+            final Set<FontStyle> set = new HashSet<>();
             set.add(FontStyle.ITALIC);
             setFont("Arial", set, 8);
             // Text color in gray
-            setTextColor(128, 0, 0);
+            setTextColor(128);
             // Page number
-            Cell(0, 10, "Page " + pageNo(), null, Position.RIGHTOF, Alignment.CENTER, true , 0);
+            Cell(0, 10, "Page " + pageNo(), null, Position.RIGHTOF, Alignment.CENTER, false , 0);
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -37,7 +36,7 @@ public class PDFTutorial3 extends FPDF {
     public void Header() {
         try {
             // Arial bold 15
-            final Set<FontStyle> set = new HashSet<FontStyle>();
+            final Set<FontStyle> set = new HashSet<>();
             set.add(FontStyle.BOLD);
             setFont("Arial", set, 15.0f);
 
@@ -52,10 +51,9 @@ public class PDFTutorial3 extends FPDF {
             setLineWidth(1);
             // Title
 
-            Cell(w, 9, title, Borders.allBorders(), Position.NEXTLINE, Alignment.CENTER, false, 0);
+            Cell(w, 9, title, Borders.allBorders(), Position.NEXTLINE, Alignment.CENTER, true, 0);
             Ln(10);
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
