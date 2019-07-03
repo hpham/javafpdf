@@ -26,7 +26,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,7 +81,7 @@ public abstract class FPDF {
     public static final float CM = (72 / 2.54f);
 
     static {
-        charwidths = new HashMap<String, Charwidths>();
+        charwidths = new HashMap<>();
     }
 
     protected static Charwidths getCharwidths(final String font) throws IOException {
@@ -434,29 +433,29 @@ public abstract class FPDF {
         // Initialization of properties
         this.page = 0;
         this.n = 2;
-        this.buffer = new ArrayList<byte[]>();
-        this.pages = new HashMap<Integer, List<byte[]>>();
-        this.orientationChanges = new HashMap<Integer, Boolean>();
+        this.buffer = new ArrayList<>();
+        this.pages = new HashMap<>();
+        this.orientationChanges = new HashMap<>();
         this.state = PDFCreationState.NONE;
-        this.fonts = new HashMap<String, Font>();
-        this.diffs = new HashMap<Integer, String>();
-        this.images = new HashMap<String, Map<String, Object>>();
-        this.links = new HashMap<Integer, Map<Integer, Float>>();
-        this.pageLinks = new HashMap<Integer, Map<Integer, Object>>();
-        this.offsets = new HashMap<Integer, Integer>();
+        this.fonts = new HashMap<>();
+        this.diffs = new HashMap<>();
+        this.images = new HashMap<>();
+        this.links = new HashMap<>();
+        this.pageLinks = new HashMap<>();
+        this.offsets = new HashMap<>();
         this.inFooter = false;
         this.lastH = 0;
         this.fontFamily = null;
         this.fontStyle = null;
         this.fontSizePt = 12;
         this.underline = false;
-        this.drawColor = "0 G"; //$NON-NLS-1$
-        this.fillColor = "0 g"; //$NON-NLS-1$
-        this.textColor = "0 g"; //$NON-NLS-1$
+        this.drawColor = "0 G";
+        this.fillColor = "0 g";
+        this.textColor = "0 g";
         this.colorFlag = false;
         this.ws = 0;
         // Standard fonts
-        this.coreFonts = new HashMap<String, String>();
+        this.coreFonts = new HashMap<>();
         this.coreFonts.put("courier", "Courier"); //$NON-NLS-1$//$NON-NLS-2$
         this.coreFonts.put("courierB", "Courier-Bold"); //$NON-NLS-1$//$NON-NLS-2$
         this.coreFonts.put("courierI", "Courier-Oblique"); //$NON-NLS-1$//$NON-NLS-2$
@@ -512,14 +511,14 @@ public abstract class FPDF {
 
     protected void _beginpage(final Orientation orientation) {
         this.page++;
-        this.pages.put(Integer.valueOf(this.page), new ArrayList<byte[]>());
+        this.pages.put(this.page, new ArrayList<>());
         this.state = PDFCreationState.PAGE;
         this.x = this.lMargin;
         this.y = this.tMargin;
         this.fontFamily = ""; //$NON-NLS-1$
         // Page orientation
         if (!orientation.equals(this.defaultOrientation)) {
-            this.orientationChanges.put(Integer.valueOf(this.page), Boolean.TRUE);
+            this.orientationChanges.put(this.page, Boolean.TRUE);
         }
         if (!orientation.equals(this.currentOrientation)) {
             // Change orientation
@@ -544,10 +543,10 @@ public abstract class FPDF {
 		float w = this.getStringWidth(txt) + this.ws * (txt.split(" ")).length; 
 		return String.format(
 				Locale.ENGLISH,
-				"%.2f %.2f %.2f %.2f re f", 
-				Float.valueOf(x * this.k),
-				Float.valueOf(this.h - (y - this.currentFont.getUp() / 1000 * this.fontSize) * this.k),
-				Float.valueOf(w * this.k), Float.valueOf(-this.currentFont.getUt() / 1000 * this.fontSizePt));
+				"%.2f %.2f %.2f %.2f re f",
+                x * this.k,
+                this.h - (y - this.currentFont.getUp() / 1000 * this.fontSize) * this.k,
+                w * this.k, -this.currentFont.getUt() / 1000 * this.fontSizePt);
 	}
 
     protected void _enddoc() {
@@ -573,7 +572,7 @@ public abstract class FPDF {
         this._out("0000000000 65535 f "); //$NON-NLS-1$
         for (int i = 1; i <= this.n; i++) {
             this._out(String.format(Locale.ENGLISH, "%010d 00000 n ", //$NON-NLS-1$
-                    this.offsets.get(Integer.valueOf(i))));
+                    this.offsets.get(i)));
         }
         // Trailer
         this._out("trailer"); //$NON-NLS-1$
@@ -668,7 +667,7 @@ public abstract class FPDF {
      */
     protected void _newobj() {
         this.n++;
-        this.offsets.put(Integer.valueOf(this.n), Integer.valueOf(this._length(this.buffer)));
+        this.offsets.put(this.n, this._length(this.buffer));
         this._out(this.n + " 0 obj"); //$NON-NLS-1$
     }
 
@@ -710,9 +709,9 @@ public abstract class FPDF {
     protected Map<String, Object> _parsejpg(String fileName, byte[] data) {
 		BufferedImage img = null;
 		try {
-			// Image quality isn't the best this way but it fully supports CMYK and YCCK
-                        JpegReader jpegReader = new JpegReader();
-                        img = jpegReader.readImage(data);
+            // Image quality isn't the best this way but it fully supports CMYK and YCCK
+            JpegReader jpegReader = new JpegReader();
+            img = jpegReader.readImage(data);
 			
 			String colspace;
                         // In some cases ColorSpaces get converted by jpegReader but not always
@@ -733,12 +732,12 @@ public abstract class FPDF {
 			ImageIO.write(img, "jpg", boas);
                         // Load image map with img metadata / raw image data
                         Map<String, Object> image = new HashMap<>();
-                        image.put("w", Integer.valueOf(img.getWidth()));
-			image.put("h", Integer.valueOf(img.getHeight()));
+                        image.put("w", img.getWidth());
+			image.put("h", img.getHeight());
 			image.put("cs", colspace); 
 			image.put("bpc", 8); 
 			image.put("f", "DCTDecode"); 
-			image.put("i", Integer.valueOf(this.images.size() + 1)); 
+			image.put("i", this.images.size() + 1);
 			image.put("data", boas.toByteArray()); 
 			return image;
 		} catch (IOException | ImageReadException e) {
@@ -843,17 +842,17 @@ public abstract class FPDF {
 			if (colspace.equals("Indexed") && (pal == null)) { 
 				throw new IOException("Missing palette in " + fileName); 
 			}
-			Map<String, Object> image = new HashMap<String, Object>();
-			image.put("w", Integer.valueOf(w)); 
-			image.put("h", Integer.valueOf(h)); 
+			Map<String, Object> image = new HashMap<>();
+			image.put("w", w);
+			image.put("h", h);
 			image.put("cs", colspace); 
-			image.put("bpc", Integer.valueOf(bpc)); 
+			image.put("bpc", bpc);
 			image.put("f", "FlateDecode"); 
 			image.put("parms", parms); 
 			image.put("pal", pal); 
 			image.put("trns", trns); 
 			image.put("data", data); 
-			image.put("i", Integer.valueOf(this.images.size() + 1)); 
+			image.put("i", this.images.size() + 1);
 			return image;
 		}
 	}
@@ -1107,11 +1106,11 @@ public abstract class FPDF {
         if (this.aliasNbPages != null) {
             // Replace number of pages
             for (int n = 1; n <= nb; n++) {
-                final List<byte[]> bytes = this.pages.get(Integer.valueOf(n));
+                final List<byte[]> bytes = this.pages.get(n);
                 final String s = _stringify(bytes).replace(this.aliasNbPages, String.valueOf(nb));
                 bytes.clear();
                 bytes.add(s.getBytes());
-                this.pages.put(Integer.valueOf(n), bytes);
+                this.pages.put(n, bytes);
             }
         }
         if (Orientation.PORTRAIT.equals(this.defaultOrientation)) {
@@ -1128,21 +1127,21 @@ public abstract class FPDF {
             this._newobj();
             this._out("<</Type /Page"); //$NON-NLS-1$
             this._out("/Parent 1 0 R"); //$NON-NLS-1$
-            if ((this.orientationChanges.get(Integer.valueOf(n)) != null) && this.orientationChanges.get(Integer.valueOf(n)).booleanValue()) {
+            if ((this.orientationChanges.get(n) != null) && this.orientationChanges.get(n)) {
                 this._out(String.format(Locale.ENGLISH, "/MediaBox [0 0 %.2f %.2f]", //$NON-NLS-1$
-                        Float.valueOf(this.hPt), Float.valueOf(this.wPt)));
+                        this.hPt, this.wPt));
             }
             this._out("/Resources 2 0 R"); //$NON-NLS-1$
-            if (this.pageLinks.containsKey(Integer.valueOf(n))) {
+            if (this.pageLinks.containsKey(n)) {
                 // Links
                 final StringBuilder annots = new StringBuilder();
                 annots.append("/Annots ["); //$NON-NLS-1$
                 for (final Map<Integer, Object> pl : this.pageLinks.values()) {
                     annots.append("<</Type /Annot /Subtype /Link /Rect ["); //$NON-NLS-1$
                     annots.append(String.format(Locale.ENGLISH, "%.2f %.2f %.2f %.2f", //$NON-NLS-1$
-                            pl.get(Integer.valueOf(0)), pl.get(Integer.valueOf(1)),
-                            Float.valueOf(((Float) pl.get(Integer.valueOf(0))).floatValue() + ((Float) pl.get(Integer.valueOf(2))).floatValue()),
-                            Float.valueOf(((Float) pl.get(Integer.valueOf(1))).floatValue() - ((Float) pl.get(Integer.valueOf(3))).floatValue())));
+                            pl.get(0), pl.get(1),
+                            (Float) pl.get(0) + (Float) pl.get(2),
+                            (Float) pl.get(1) - (Float) pl.get(3)));
                     annots.append("] /Border [0 0 0] "); //$NON-NLS-1$
                     if (pl.get(4) instanceof String) {
                         annots.append("/A <</S /URI /URI "); //$NON-NLS-1$
@@ -1152,7 +1151,7 @@ public abstract class FPDF {
                         final Map<Integer, Float> l = this.links.get(pl.get(4));
                         final float h = (this.orientationChanges.get(l.get(0))) ? this.wPt : this.hPt;
                         annots.append(String.format(Locale.ENGLISH, "/Dest [%d 0 R /XYZ 0 %.2f null]>>", //$NON-NLS-1$
-                                Float.valueOf(1 + 2 * l.get(0)), Float.valueOf(h - l.get(1) * this.k)));
+                                1 + 2 * l.get(0), h - l.get(1) * this.k));
                     }
                 }
                 annots.append("]"); //$NON-NLS-1$
@@ -1238,7 +1237,7 @@ public abstract class FPDF {
         this._putfonts(); // FIXME no support for embedded fonts
         this._putimages();
         // Resource dictionary
-        this.offsets.put(Integer.valueOf(2), Integer.valueOf(this._length(this.buffer)));
+        this.offsets.put(2, this._length(this.buffer));
         this._out("2 0 obj"); //$NON-NLS-1$
         this._out("<<"); //$NON-NLS-1$
         this._putresourcedict();
@@ -1291,9 +1290,9 @@ public abstract class FPDF {
      */
     public int addLink() {
         final int n = this.links.size() + 1;
-        final Map<Integer, Float> map = new HashMap<Integer, Float>();
-        map.put(Integer.valueOf(0), Float.valueOf(0));
-        this.links.put(Integer.valueOf(n), map);
+        final Map<Integer, Float> map = new HashMap<>();
+        map.put(0, (float) 0);
+        this.links.put(n, map);
         return n;
     }
 
@@ -1342,7 +1341,7 @@ public abstract class FPDF {
         this._out("2 J"); //$NON-NLS-1$
         // Set line width
         this.lineWidth = lw;
-        this._out(String.format(Locale.ENGLISH, "%.2f w", Float.valueOf(lw * this.k))); //$NON-NLS-1$
+        this._out(String.format(Locale.ENGLISH, "%.2f w", lw * this.k)); //$NON-NLS-1$
         // Set font
         if (family != null) {
             this.setFont(family, style, size);
@@ -1363,7 +1362,7 @@ public abstract class FPDF {
         // Restore line width
         if (this.lineWidth != lw) {
             this.lineWidth = lw;
-            this._out(String.format(Locale.ENGLISH, "%.2f w", Float.valueOf(lw * this.k))); //$NON-NLS-1$
+            this._out(String.format(Locale.ENGLISH, "%.2f w", lw * this.k)); //$NON-NLS-1$
         }
         // Restore font
         if (family != null) {
@@ -1510,8 +1509,7 @@ public abstract class FPDF {
             this.x = x;
             if (ws > 0) {
                 this.ws = ws;
-                this._out(String.format(Locale.ENGLISH, "%.3f Tw", //$NON-NLS-1$
-                        Float.valueOf(ws * k)));
+                this._out(String.format(Locale.ENGLISH, "%.3f Tw", ws * k));
             }
         }
         final float w1 = (w == 0) ? this.w - this.rMargin - this.x : w;
@@ -1524,28 +1522,28 @@ public abstract class FPDF {
                 op = 'S';
             }
             s.append(String.format(Locale.ENGLISH,
-					"%.2f %.2f %.2f %.2f re %s ", 
-					Float.valueOf(this.x * k), Float.valueOf((this.h - this.y) * k), Float.valueOf(w1 * k),
-					Float.valueOf(-h * k), op));        
+					"%.2f %.2f %.2f %.2f re %s ",
+                    this.x * k, (this.h - this.y) * k, w1 * k,
+                    -h * k, op));
 		}
         if (border != null) {
             x = this.x;
             y = this.y;
             if (border.getLeft()) {
                 s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-                        Float.valueOf(x * k), Float.valueOf((this.h - y) * k), Float.valueOf(x * k), Float.valueOf((this.h - (y + h)) * k)));
+                        x * k, (this.h - y) * k, x * k, (this.h - (y + h)) * k));
             }
             if (border.getTop()) {
                 s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-                        Float.valueOf(x * k), Float.valueOf((this.h - y) * k), Float.valueOf((x + w1) * k), Float.valueOf((this.h - y) * k)));
+                        x * k, (this.h - y) * k, (x + w1) * k, (this.h - y) * k));
             }
             if (border.getRight()) {
                 s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-                        Float.valueOf((x + w1) * k), Float.valueOf((this.h - y) * k), Float.valueOf((x + w1) * k), Float.valueOf((this.h - (y + h)) * k)));
+                        (x + w1) * k, (this.h - y) * k, (x + w1) * k, (this.h - (y + h)) * k));
             }
             if (border.getBottom()) {
                 s.append(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S ", //$NON-NLS-1$
-                        Float.valueOf(x * k), Float.valueOf((this.h - (y + h)) * k), Float.valueOf((x + w1) * k), Float.valueOf((this.h - (y + h)) * k)));
+                        x * k, (this.h - (y + h)) * k, (x + w1) * k, (this.h - (y + h)) * k));
             }
         }
         if (txt != null) {
@@ -1564,7 +1562,7 @@ public abstract class FPDF {
                     .replace("(", "\\(") //$NON-NLS-1$//$NON-NLS-2$
                     .replace(")", "\\)"); //$NON-NLS-1$//$NON-NLS-2$
             s.append(String.format(Locale.ENGLISH, "BT %.2f %.2f Td (%s) Tj ET", //$NON-NLS-1$
-                    Float.valueOf((this.x + dx) * k), Float.valueOf((this.h - (this.y + .5f * h + .3f * this.fontSize)) * k), txt2));
+                    (this.x + dx) * k, (this.h - (this.y + .5f * h + .3f * this.fontSize)) * k, txt2));
             if (this.underline) {
                 s.append(' ');
                 s.append(this._dounderline(this.x + dx, this.y + .5f * h + .3f * this.fontSize, txt));
@@ -1624,8 +1622,7 @@ public abstract class FPDF {
                     // Calculate character spacing in points
                     final float char_space = (w1 - this.cMargin * 2 - str_width) / Math.max(txt.length() - 1, 1) * this.k;
                     // Set character spacing
-                    this._out(String.format(Locale.ENGLISH, "BT %.2f Tc ET", Float //$NON-NLS-1$
-                            .valueOf(char_space)));
+                    this._out(String.format(Locale.ENGLISH, "BT %.2f Tc ET", char_space));
                     break;
 
                 // Horizontal scaling
@@ -1633,8 +1630,7 @@ public abstract class FPDF {
                     // Calculate horizontal scaling
                     final float horiz_scale = ratio * 100.0f;
                     // Set horizontal scaling
-                    this._out(String.format(Locale.ENGLISH, "BT %.2f Tz ET", Float //$NON-NLS-1$
-                            .valueOf(horiz_scale)));
+                    this._out(String.format(Locale.ENGLISH, "BT %.2f Tz ET", horiz_scale));
                     break;
 
             }
@@ -1931,9 +1927,9 @@ public abstract class FPDF {
 		}
 		
 		this._out(String.format(Locale.ENGLISH,
-				"q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q", 
-				Float.valueOf(w1 * this.k), Float.valueOf(h1 * this.k), Float.valueOf(coords.getX() * this.k),
-				Float.valueOf((this.h - (coords.getY() + h1)) * this.k), info.get("i"))); 
+				"q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q",
+                w1 * this.k, h1 * this.k, coords.getX() * this.k,
+                (this.h - (coords.getY() + h1)) * this.k, info.get("i")));
 		if (link > 0) {
 			this.Link(coords.getX(), coords.getY(), w1, h1, link);
 		}
@@ -1954,7 +1950,7 @@ public abstract class FPDF {
     public void setLineStyle(final LineStyle style) {
         if (style.getWidth() != null) {
             final float width_prev = this.lineWidth;
-            this.setLineWidth(style.getWidth().floatValue());
+            this.setLineWidth(style.getWidth());
             this.lineWidth = width_prev;
         }
         if (style.getCap() != null) {
@@ -1969,10 +1965,9 @@ public abstract class FPDF {
                 if (sb.length() > 0) {
                     sb.append(' ');
                 }
-                sb.append(String.format(Locale.ENGLISH, "%.2f", Float.valueOf(dash))); //$NON-NLS-1$
+                sb.append(String.format(Locale.ENGLISH, "%.2f", dash));
             }
-            this._out(String.format(Locale.ENGLISH, "[%s] %.2f d", sb.toString(), Float //$NON-NLS-1$
-                    .valueOf(style.getPhase())));
+            this._out(String.format(Locale.ENGLISH, "[%s] %.2f d", sb.toString(), style.getPhase()));
         }
         if (style.getColor() != null) {
             this.setDrawColor(style.getColor());
@@ -1987,20 +1982,20 @@ public abstract class FPDF {
      */
     public void Line(final Coordinate start, final Coordinate end) {
         this._out(String.format(Locale.ENGLISH, "%.2f %.2f m %.2f %.2f l S", //$NON-NLS-1$
-                Float.valueOf(start.getX() * this.k), Float.valueOf((this.h - start.getY()) * this.k), Float.valueOf(end.getX() * this.k), Float.valueOf((this.h - end.getY()) * this.k)));
+                start.getX() * this.k, (this.h - start.getY()) * this.k, end.getX() * this.k, (this.h - end.getY()) * this.k));
     }
 
     /**
      * Put a link on the page
      */
     public void Link(final float x, final float y, final float w, final float h, final int link) {
-        final Map<Integer, Object> map = new HashMap<Integer, Object>();
-        map.put(Integer.valueOf(0), Float.valueOf(x * this.k));
-        map.put(Integer.valueOf(1), Float.valueOf(this.hPt - y * this.k));
-        map.put(Integer.valueOf(2), Float.valueOf(w * this.k));
-        map.put(Integer.valueOf(3), Float.valueOf(h * this.k));
-        map.put(Integer.valueOf(4), Float.valueOf(link));
-        this.pageLinks.put(Integer.valueOf(this.page), map);
+        final Map<Integer, Object> map = new HashMap<>();
+        map.put(0, x * this.k);
+        map.put(1, this.hPt - y * this.k);
+        map.put(2, w * this.k);
+        map.put(3, h * this.k);
+        map.put(4, (float) link);
+        this.pageLinks.put(this.page, map);
     }
 
     /**
@@ -2201,9 +2196,9 @@ public abstract class FPDF {
 	public void Rect(final Coordinate coords, final float w, float h, final DrawMode mode) {
 		if (mode != null) {
 			this._out(String.format(Locale.ENGLISH,
-					"%.2f %.2f %.2f %.2f re %s", 
-					Float.valueOf(coords.getX() * this.k), Float.valueOf((this.h - coords.getY()) * this.k),
-					Float.valueOf(w * this.k), Float.valueOf(-h * this.k), mode.getOp()));
+					"%.2f %.2f %.2f %.2f re %s",
+                    coords.getX() * this.k, (this.h - coords.getY()) * this.k,
+                    w * this.k, -h * this.k, mode.getOp()));
 		}
 	}
 
@@ -2542,12 +2537,12 @@ public abstract class FPDF {
 	 */
 	public void setDrawColor(final Color color) {
 		if (color.isGrayscale()) {
-			this.drawColor = String.format(Locale.ENGLISH, "%.3f G", Float.valueOf(color.getV() / 255f)); 
+			this.drawColor = String.format(Locale.ENGLISH, "%.3f G", color.getV() / 255f);
 		} else {
 			this.drawColor = String.format(Locale.ENGLISH,
-					"%.3f %.3f %.3f RG", 
-					Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
-					Float.valueOf(color.getB() / 255f));
+					"%.3f %.3f %.3f RG",
+                    color.getR() / 255f, color.getG() / 255f,
+                    color.getB() / 255f);
 		}
 		if (this.page > 0) {
 			this._out(this.drawColor);
@@ -2573,12 +2568,12 @@ public abstract class FPDF {
 	 */
 	public void setFillColor(final Color color) {
 		if (color.isGrayscale()) {
-			this.fillColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); 
+			this.fillColor = String.format(Locale.ENGLISH, "%.3f g", color.getV() / 255f);
 		} else {
 			this.fillColor = String.format(Locale.ENGLISH,
-					"%.3f %.3f %.3f rg", 
-					Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
-					Float.valueOf(color.getB() / 255f));
+					"%.3f %.3f %.3f rg",
+                    color.getR() / 255f, color.getG() / 255f,
+                    color.getB() / 255f);
 		}
 		this.colorFlag = (this.fillColor != this.textColor);
 		if (this.page > 0) {
@@ -2617,11 +2612,7 @@ public abstract class FPDF {
                 || "zapfdingbats".equals(family)) { //$NON-NLS-1$
             style = null;
         }
-        if ((style != null) && style.contains(FontStyle.UNDERLINE)) {
-            this.underline = true;
-        } else {
-            this.underline = false;
-        }
+        this.underline = (style != null) && style.contains(FontStyle.UNDERLINE);
         if (size == 0) {
             size = this.fontSizePt;
         }
@@ -2682,7 +2673,7 @@ public abstract class FPDF {
         this.fontSize = size / this.k;
         if (this.page > 0) {
             this._out(String.format(Locale.ENGLISH, "BT /F%d %.2f Tf ET", //$NON-NLS-1$
-                    this.currentFont.getI(), Float.valueOf(this.fontSizePt)));
+                    this.currentFont.getI(), this.fontSizePt));
         }
     }
 
@@ -2709,7 +2700,7 @@ public abstract class FPDF {
     public void setLineWidth(final float width) {
         this.lineWidth = width;
         if (this.page > 0) {
-            this._out(String.format(Locale.ENGLISH, "%.2f w", Float.valueOf(width * this.k))); //$NON-NLS-1$
+            this._out(String.format(Locale.ENGLISH, "%.2f w", width * this.k)); //$NON-NLS-1$
         }
     }
 
@@ -2723,9 +2714,9 @@ public abstract class FPDF {
         if (page == -1) {
             page = this.page;
         }
-        final Map<Integer, Float> map = new HashMap<Integer, Float>();
-        map.put(Integer.valueOf(page), Float.valueOf(y));
-        this.links.put(Integer.valueOf(link), map);
+        final Map<Integer, Float> map = new HashMap<>();
+        map.put(page, y);
+        this.links.put(link, map);
     }
 
     /**
@@ -2761,12 +2752,12 @@ public abstract class FPDF {
 	/** Set color for text */
 	public void setTextColor(final Color color) {
 		if (color.isGrayscale()) {
-			this.textColor = String.format(Locale.ENGLISH, "%.3f g", Float.valueOf(color.getV() / 255f)); 
+			this.textColor = String.format(Locale.ENGLISH, "%.3f g", color.getV() / 255f);
 		} else {
 			this.textColor = String.format(Locale.ENGLISH,
-					"%.3f %.3f %.3f rg", 
-					Float.valueOf(color.getR() / 255f), Float.valueOf(color.getG() / 255f),
-					Float.valueOf(color.getB() / 255f));
+					"%.3f %.3f %.3f rg",
+                    color.getR() / 255f, color.getG() / 255f,
+                    color.getB() / 255f);
 		}
 		this.colorFlag = (this.fillColor != this.textColor);
 	}
