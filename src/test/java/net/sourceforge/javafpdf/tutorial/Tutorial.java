@@ -54,7 +54,6 @@ public class Tutorial {
         System.out.println(temp.getAbsolutePath());
     }
 
-    // FIXME fillColor do not work
     @Test
     public void test_tutor_4() throws IOException, URISyntaxException {
         final PDFTutorial4 pdf = new PDFTutorial4();

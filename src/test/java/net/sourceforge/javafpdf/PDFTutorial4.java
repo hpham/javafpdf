@@ -26,11 +26,10 @@ public class PDFTutorial4 extends FPDF {
             set.add(FontStyle.ITALIC);
             setFont("Arial", set, 8);
             // Text color in gray
-            setTextColor(128, 0, 0);
+            setTextColor(128);
             // Page number
-            Cell(0, 10, "Page " + pageNo(), Position.BELOW, Alignment.CENTER);
+            Cell(0, 10, "Page " + pageNo(), Position.NEXTLINE, Alignment.CENTER);
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -53,12 +52,10 @@ public class PDFTutorial4 extends FPDF {
             // Thickness of frame (1 mm)
             setLineWidth(1);
             // Title
-            // FIXME fillColor do not work
-            Cell(w, 9, title, null, Position.NEXTLINE, Alignment.JUSTIFIED, true, 0);
+            Cell(w, 9, title, Borders.allBorders(), Position.NEXTLINE, Alignment.CENTER, true, 0);
             Ln(10);
             this.y0 = this.getY();
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
