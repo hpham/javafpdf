@@ -1437,6 +1437,10 @@ public abstract class FPDF {
         this.Cell(w, h, txt, null, null, align, false, 0);
     }
 
+    public void Cell(final float w, final float h, final String txt, final Borders borders) throws IOException {
+        this.Cell(w, h, txt, borders, null, null, false, 0);
+    }
+
     /**
      * Output a cell.
      *

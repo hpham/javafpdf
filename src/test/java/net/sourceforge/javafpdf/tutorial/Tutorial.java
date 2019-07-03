@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.sourceforge.javafpdf.*;
@@ -40,7 +41,6 @@ public class Tutorial {
         System.out.println(temp.getAbsolutePath());
     }
 
-    // FIXME fillColor do not work
     @Test
     public void test_tutor_3() throws IOException, URISyntaxException {
         final PDFTutorial3 pdf = new PDFTutorial3();
@@ -62,6 +62,24 @@ public class Tutorial {
         pdf.setAuthor("Jules Verne");
         pdf.printChapter(1, "A RUNAWAY REEF", "20k_c1.txt");
         pdf.printChapter(2, "THE PROS AND CONS", "20k_c2.txt");
+        final File temp = File.createTempFile("fpdf", ".pdf");
+        pdf.output(temp);
+        System.out.println(temp.getAbsolutePath());
+    }
+
+    @Test
+    public void test_tutor_5() throws IOException, URISyntaxException {
+        final PDFTutorial5 pdf = new PDFTutorial5();
+
+        pdf.setFont("Arial", null, 14);
+        pdf.addPage();
+        List<List<String>> records = pdf.LoadData("countries.txt");
+        String[] header = new String[]{"Country",  "Capital", "Area (sq km)", "Pop. (thousands)"};
+        pdf.basicTable(header, records);
+        pdf.addPage();
+        pdf.improveTable(header, records);
+        pdf.addPage();
+        pdf.fancyTable(header, records);
         final File temp = File.createTempFile("fpdf", ".pdf");
         pdf.output(temp);
         System.out.println(temp.getAbsolutePath());
