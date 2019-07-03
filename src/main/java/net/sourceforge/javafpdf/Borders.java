@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so,  subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -53,13 +53,18 @@ public class Borders {
         this.bottom = bottom;
     }
 
-    public static Borders noBorders(){
+    public static Borders noBorders() {
         return new Borders(false, false, false, false);
     }
 
-    public static Borders allBorders(){
+    public static Borders allBorders() {
         return new Borders();
     }
+
+    public static BordersBuilder builder() {
+        return new BordersBuilder();
+    }
+
     /**
      * Constructor. Creates a Borders object with all borders set.
      */
@@ -113,5 +118,43 @@ public class Borders {
      */
     public boolean getAll() {
         return this.left && this.top && this.right && this.bottom;
+    }
+
+
+    public static class BordersBuilder {
+        private boolean left;
+
+        private boolean top;
+
+        private boolean right;
+
+        private boolean bottom;
+
+        BordersBuilder() {
+        }
+
+        BordersBuilder left() {
+            this.left = true;
+            return this;
+        }
+
+        BordersBuilder right() {
+            this.right = true;
+            return this;
+        }
+
+        BordersBuilder top() {
+            this.top = true;
+            return this;
+        }
+
+        BordersBuilder bottom() {
+            this.bottom = true;
+            return this;
+        }
+
+        public Borders build() {
+            return new Borders(this.left, this.top, this.right, this.bottom);
+        }
     }
 }

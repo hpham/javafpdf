@@ -54,15 +54,19 @@ public class PDFTutorial5 extends FPDF {
         int sum = w.stream().mapToInt(num -> num).sum();
         // Header
         for (int i = 0; i < w.size(); i++) {
-            Cell(w.get(i), 7, header[i], Borders.allBorders());
+            Cell(w.get(i), 7, header[i], Borders.allBorders(),Position.RIGHTOF, Alignment.CENTER, false, 0);
         }
         Ln();
         // Data
+        Borders leftright = Borders.builder()
+                .left()
+                .right()
+                .build();
         for (List<String> row : data) {
-            Cell(w.get(0), 6, row.get(0), new Borders(true, false, true, false));
-            Cell(w.get(1), 6, row.get(1), new Borders(true, false, true, false));
-            Cell(w.get(2), 6, row.get(2), new Borders(true, false, true, false), Position.RIGHTOF, Alignment.RIGHT, false, 0);
-            Cell(w.get(3), 6, row.get(3), new Borders(true, false, true, false), Position.RIGHTOF, Alignment.RIGHT, false, 0);
+            Cell(w.get(0), 6, row.get(0), leftright);
+            Cell(w.get(1), 6, row.get(1), leftright);
+            Cell(w.get(2), 6, row.get(2), leftright, Position.RIGHTOF, Alignment.RIGHT, false, 0);
+            Cell(w.get(3), 6, row.get(3), leftright, Position.RIGHTOF, Alignment.RIGHT, false, 0);
             Ln();
         }
         Cell(sum, 0, "", new Borders(false, true, false, false));
@@ -70,16 +74,18 @@ public class PDFTutorial5 extends FPDF {
 
     public void fancyTable(String[] header, List<List<String>> data) throws IOException {
 
-        setFillColor(255, 0, 0 );
+        setFillColor(255, 0, 0);
         setTextColor(255);
-        setDrawColor(128,0,0);
-        setFont("Arial", new HashSet<FontStyle>(){{add(FontStyle.BOLD);}}, 14);
+        setDrawColor(128, 0, 0);
+        setFont("Arial", new HashSet<FontStyle>() {{
+            add(FontStyle.BOLD);
+        }}, 14);
         setLineWidth(0.3f);
         List<Integer> w = Arrays.asList(40, 35, 40, 45);
         int sum = w.stream().mapToInt(num -> num).sum();
         // Header
         for (int i = 0; i < w.size(); i++) {
-            Cell(w.get(i), 7, header[i], Borders.allBorders(),Position.RIGHTOF, Alignment.CENTER, true, 0);
+            Cell(w.get(i), 7, header[i], Borders.allBorders(), Position.RIGHTOF, Alignment.CENTER, true, 0);
         }
         Ln();
         // Data
@@ -87,15 +93,19 @@ public class PDFTutorial5 extends FPDF {
         setTextColor(0);
         setFont("Arial", null, 14);
         boolean fill = false;
+        Borders leftright = Borders.builder()
+                .left()
+                .right()
+                .build();
         for (List<String> row : data) {
-            Cell(w.get(0), 6, row.get(0), new Borders(true, false, true, false), Position.RIGHTOF, Alignment.LEFT, fill, 0);
-            Cell(w.get(1), 6, row.get(1), new Borders(true, false, true, false), Position.RIGHTOF, Alignment.LEFT, fill, 0);
-            Cell(w.get(2), 6, row.get(2), new Borders(true, false, true, false), Position.RIGHTOF, Alignment.RIGHT, fill, 0);
-            Cell(w.get(3), 6, row.get(3), new Borders(true, false, true, false), Position.RIGHTOF, Alignment.RIGHT, fill, 0);
+            Cell(w.get(0), 6, row.get(0), leftright, Position.RIGHTOF, Alignment.LEFT, fill, 0);
+            Cell(w.get(1), 6, row.get(1), leftright, Position.RIGHTOF, Alignment.LEFT, fill, 0);
+            Cell(w.get(2), 6, row.get(2), leftright, Position.RIGHTOF, Alignment.RIGHT, fill, 0);
+            Cell(w.get(3), 6, row.get(3), leftright, Position.RIGHTOF, Alignment.RIGHT, fill, 0);
             Ln();
             fill = !fill;
         }
-        Cell(sum, 0, "", new Borders(false, true, false, false));
+        Cell(sum, 0, "", Borders.builder().top().build());
     }
 
     @Override
