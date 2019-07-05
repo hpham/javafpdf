@@ -118,6 +118,12 @@ public abstract class FPDF {
     protected Map<Integer, List<byte[]>> pages;
 
     /**
+     * array containing pages
+     */
+    protected Map<Integer, Format> pageSizes;
+
+
+    /**
      * current document state
      */
     protected PDFCreationState state;
@@ -138,20 +144,13 @@ public abstract class FPDF {
     protected Orientation currentOrientation;
 
     /**
-     * array indicating orientation changes
-     */
-    protected Map<Integer, Boolean> orientationChanges;
-
-    /**
      * scale factor (number of points in user unit)
      */
     protected float k;
 
-    /**
-     * dimensions of page format in points
-     */
-    protected float fwPt, fhPt;
+    protected Format defaultPageFormat;
 
+    protected Format currentPageFormat;
     /**
      * dimensions of page format in user unit
      */
@@ -435,7 +434,7 @@ public abstract class FPDF {
         this.n = 2;
         this.buffer = new ArrayList<>();
         this.pages = new HashMap<>();
-        this.orientationChanges = new HashMap<>();
+        this.pageSizes= new HashMap<>();
         this.state = PDFCreationState.NONE;
         this.fonts = new HashMap<>();
         this.diffs = new HashMap<>();
@@ -473,25 +472,23 @@ public abstract class FPDF {
         // Scale factor
         this.k = unit;
         // Page format
-        this.fwPt = format.getWidth();
-        this.fhPt = format.getHeight();
-        this.fw = this.fwPt / this.k;
-        this.fh = this.fhPt / this.k;
+        this.defaultPageFormat = _getpageformat(format);
+        this.currentPageFormat = _getpageformat(format);
         // Page orientation
         switch (orientation) {
             case PORTRAIT:
-                this.wPt = this.fwPt;
-                this.hPt = this.fhPt;
+                this.w = this.defaultPageFormat.getWidth();
+                this.h = this.defaultPageFormat.getHeight();
                 break;
             case LANDSCAPE:
-                this.wPt = this.fhPt;
-                this.hPt = this.fwPt;
+                this.w = this.defaultPageFormat.getHeight();
+                this.h = this.defaultPageFormat.getWidth();
                 break;
         }
         this.defaultOrientation = orientation;
         this.currentOrientation = this.defaultOrientation;
-        this.w = this.wPt / this.k;
-        this.h = this.hPt / this.k;
+        this.wPt = this.w * this.k;
+        this.hPt = this.h * this.k;
         // Page margins (1 cm)
         final float margin = 28.35f / this.k;
         this.setMargins(margin, margin);
@@ -509,32 +506,38 @@ public abstract class FPDF {
         this.pdfVersion = "1.3"; //$NON-NLS-1$
     }
 
-    protected void _beginpage(final Orientation orientation) {
+    public Format _getpageformat(Format format) {
+        return new Format(format.getWidth() / this.k, format.getHeight() / this.k);
+    }
+
+    protected void _beginpage(final Orientation orientation, final Format format) {
         this.page++;
         this.pages.put(this.page, new ArrayList<>());
         this.state = PDFCreationState.PAGE;
         this.x = this.lMargin;
         this.y = this.tMargin;
         this.fontFamily = ""; //$NON-NLS-1$
-        // Page orientation
-        if (!orientation.equals(this.defaultOrientation)) {
-            this.orientationChanges.put(this.page, Boolean.TRUE);
-        }
-        if (!orientation.equals(this.currentOrientation)) {
+        if (!orientation.equals(this.currentOrientation) ||
+                format.getHeight() != this.currentPageFormat.getHeight() ||
+                format.getWidth() != this.currentPageFormat.getWidth()) {
             // Change orientation
             if (orientation.equals(Orientation.PORTRAIT)) {
-                this.wPt = this.fwPt;
-                this.hPt = this.fhPt;
-                this.w = this.fw;
-                this.h = this.fh;
+                this.w = format.getWidth();
+                this.h = format.getHeight();
             } else {
-                this.wPt = this.fhPt;
-                this.hPt = this.fwPt;
-                this.w = this.fh;
-                this.h = this.fw;
+                this.w = format.getHeight();
+                this.h = format.getWidth();
             }
+            this.wPt = this.w * this.k;
+            this.hPt = this.h * this.k;
             this.pageBreakTrigger = this.h - this.bMargin;
             this.currentOrientation = orientation;
+            this.currentPageFormat = format;
+        }
+        if (!orientation.equals(this.currentOrientation) ||
+                format.getHeight() != this.defaultPageFormat.getHeight() ||
+                format.getWidth() != this.defaultPageFormat.getWidth()) {
+            this.pageSizes.put(this.page, new Format(this.wPt, this.hPt));
         }
     }
 
@@ -1114,22 +1117,21 @@ public abstract class FPDF {
             }
         }
         if (Orientation.PORTRAIT.equals(this.defaultOrientation)) {
-            this.wPt = this.fwPt;
-            this.hPt = this.fhPt;
+            this.wPt = this.defaultPageFormat.getWidth() * this.k;
+            this.hPt = this.defaultPageFormat.getHeight() * this.k;
         } else {
-            this.wPt = this.fhPt;
-            this.hPt = this.fwPt;
+            this.wPt = this.defaultPageFormat.getHeight() * this.k;
+            this.hPt = this.defaultPageFormat.getWidth() * this.k;
         }
-        final String filter = (this.compress) ? "/Filter /FlateDecode " //$NON-NLS-1$
-                : ""; //$NON-NLS-1$
+        final String filter = (this.compress) ? "/Filter /FlateDecode " : ""; //$NON-NLS-1$
         for (int n = 1; n <= nb; n++) {
             // Page
             this._newobj();
             this._out("<</Type /Page"); //$NON-NLS-1$
             this._out("/Parent 1 0 R"); //$NON-NLS-1$
-            if ((this.orientationChanges.get(n) != null) && this.orientationChanges.get(n)) {
+            if ((this.pageSizes.get(n) != null)) {
                 this._out(String.format(Locale.ENGLISH, "/MediaBox [0 0 %.2f %.2f]", //$NON-NLS-1$
-                        this.hPt, this.wPt));
+                        this.pageSizes.get(n).getHeight(), this.pageSizes.get(n).getWidth()));
             }
             this._out("/Resources 2 0 R"); //$NON-NLS-1$
             if (this.pageLinks.containsKey(n)) {
@@ -1149,7 +1151,7 @@ public abstract class FPDF {
                         annots.append(">>>>"); //$NON-NLS-1$
                     } else {
                         final Map<Integer, Float> l = this.links.get(pl.get(4));
-                        final float h = (this.orientationChanges.get(l.get(0))) ? this.wPt : this.hPt;
+                        final float h = (this.pageSizes.get(l.get(0))!=null) ? this.pageSizes.get(l.get(0)).getWidth() : this.hPt;
                         annots.append(String.format(Locale.ENGLISH, "/Dest [%d 0 R /XYZ 0 %.2f null]>>", //$NON-NLS-1$
                                 1 + 2 * l.get(0), h - l.get(1) * this.k));
                     }
@@ -1302,7 +1304,7 @@ public abstract class FPDF {
      * @throws IOException if the default font can not be loaded.
      */
     public void addPage() throws IOException {
-        this.addPage(this.defaultOrientation);
+        this.addPage(this.defaultOrientation, this.defaultPageFormat);
     }
 
     /**
@@ -1311,7 +1313,7 @@ public abstract class FPDF {
      * @param orientation the page orientation
      * @throws IOException if the default font can not be loaded.
      */
-    public void addPage(final Orientation orientation) throws IOException {
+    public void addPage(final Orientation orientation, final Format format) throws IOException {
         if (this.state == PDFCreationState.NONE) {
             this.open();
         }
@@ -1333,9 +1335,9 @@ public abstract class FPDF {
         }
         // Start new page
         if (orientation != null) {
-            this._beginpage(orientation);
+            this._beginpage(orientation, format);
         } else {
-            this._beginpage(this.defaultOrientation);
+            this._beginpage(this.defaultOrientation, format);
         }
         // Set line cap style to square
         this._out("2 J"); //$NON-NLS-1$
@@ -1505,7 +1507,7 @@ public abstract class FPDF {
                 this.ws = 0;
                 this._out("0 Tw"); //$NON-NLS-1$
             }
-            this.addPage(this.currentOrientation);
+            this.addPage(this.currentOrientation, this.currentPageFormat);
             this.x = x;
             if (ws > 0) {
                 this.ws = ws;
@@ -1784,7 +1786,7 @@ public abstract class FPDF {
             return;
         }
         if (this.page == 0) {
-            this.addPage(null);
+            this.addPage(null, null);
         }
         // Page footer
         this.inFooter = true;
@@ -1921,7 +1923,7 @@ public abstract class FPDF {
 		// position the mask off the page so it can't be seen
 		if (isMask) {
 			coords = new Coordinate(
-			  (this.currentOrientation == Orientation.PORTRAIT ? this.fwPt : this.fhPt) + 10,
+			  (this.currentOrientation == Orientation.PORTRAIT ? this.defaultPageFormat.getWidth() : this.defaultPageFormat.getHeight()) + 10,
 				coords.getY()
 			);
 		}

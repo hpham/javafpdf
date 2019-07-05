@@ -90,7 +90,7 @@ public abstract class PdfMultiCellTable extends FPDF {
 	private void CheckPageBreak(float h) throws IOException {
 		// If the height h would cause an overflow, add a new page immediately
 		if (this.getY() + h > this.pageBreakTrigger)
-			this.addPage(this.currentOrientation);
+			this.addPage(this.currentOrientation, this.currentPageFormat);
 	}
 
 	private int NbLines(float w, String txt) {
