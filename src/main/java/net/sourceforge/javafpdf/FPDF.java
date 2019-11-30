@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -302,6 +303,11 @@ public abstract class FPDF {
     protected float pageBreakTrigger;
 
     /**
+     * flag set when processing header
+     */
+    protected boolean inHeader;
+
+    /**
      * flag set when processing footer
      */
     protected boolean inFooter;
@@ -442,6 +448,7 @@ public abstract class FPDF {
         this.links = new HashMap<>();
         this.pageLinks = new HashMap<>();
         this.offsets = new HashMap<>();
+        this.inHeader = false;
         this.inFooter = false;
         this.lastH = 0;
         this.fontFamily = null;
@@ -685,12 +692,7 @@ public abstract class FPDF {
     protected void _out(final String s) {
         // Add a line to the document
         if (this.state == PDFCreationState.PAGE) {
-            try {
-                this.pages.get(this.page).add((s + '\n').getBytes("ISO-8859-1"));
-            } catch (UnsupportedEncodingException e) {
-                this.pages.get(this.page).add((s + '\n').getBytes());
-                e.printStackTrace();
-            }
+            this.pages.get(this.page).add((s + '\n').getBytes(StandardCharsets.ISO_8859_1));
         } else {
             /*
              * NOTE This is a hack put in place because Java converts to true
@@ -700,17 +702,12 @@ public abstract class FPDF {
              * causes any trouble or unexpected side-effects. Binary data should
              * probably not go through this method.
              */
-            try {
-                this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes("ISO-8859-1")); //$NON-NLS-1$
-            } catch (final UnsupportedEncodingException e) {
-                this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes());
-                e.printStackTrace();
-            }
+            this.buffer.add((s.replace('€', (char) 128) + '\n').getBytes(StandardCharsets.ISO_8859_1)); //$NON-NLS-1$
         }
     }
 
     protected Map<String, Object> _parsejpg(String fileName, byte[] data) {
-		BufferedImage img = null;
+		BufferedImage img;
 		try {
             // Image quality isn't the best this way but it fully supports CMYK and YCCK
             JpegReader jpegReader = new JpegReader();
@@ -755,23 +752,23 @@ public abstract class FPDF {
 		try (ByteArrayInputStream f = new ByteArrayInputStream(imageData)) {
 			// Check signature
 			char[] sig = new char[] { 137, 'P', 'N', 'G', 13, 10, 26, 10 };
-			for (int i = 0; i < sig.length; i++) {
-				int in = f.read();
-				char c = (char) in;
-				if (c != sig[i]) {
-					throw new IOException("Not a PNG file: " + fileName); 
-				}
-			}
+            for (char character : sig) {
+                int in = f.read();
+                char c = (char) in;
+                if (c != character) {
+                    throw new IOException("Not a PNG file: " + fileName);
+                }
+            }
 			this._fread(f, 4);
 			// Read header chunk
 			char[] chunk = new char[] { 'I', 'H', 'D', 'R' };
-			for (int i = 0; i < chunk.length; i++) {
-				int in = f.read();
-				char c = (char) in;
-				if (c != chunk[i]) {
-					throw new IOException("Not a PNG file: " + fileName); 
-				}
-			}
+            for (char character : chunk) {
+                int in = f.read();
+                char c = (char) in;
+                if (c != character) {
+                    throw new IOException("Not a PNG file: " + fileName);
+                }
+            }
 			int w = this._freadint(f);
 			int h = this._freadint(f);
 			int bpc = f.read();
@@ -803,46 +800,56 @@ public abstract class FPDF {
 			}
 			this._fread(f, 4);
 			StringBuilder sb = new StringBuilder();
-			sb.append("/DecodeParms <</Predictor 15 /Colors ").append( 
-					ct == 2 ? 3 : 1).append(" /BitsPerComponent ").append(bpc) 
-					.append(" /Columns ").append(w).append(">>"); 
+			sb.append("/DecodeParms <</Predictor 15 /Colors ")
+                    .append(ct == 2 ? 3 : 1)
+                    .append(" /BitsPerComponent ")
+                    .append(bpc)
+					.append(" /Columns ")
+                    .append(w)
+                    .append(">>");
 			String parms = sb.toString();
 			// Scan chunks looking for palette, transparency and image data
 			byte[] pal = null;
 			byte[] trns = null;
 			byte[] data = null;
-			do {
-				int n = this._freadint(f);
-				String type = new String(this._fread(f, 4));
-				if (type.equals("PLTE")) { 
-					// Read palette
-					pal = this._freadb(f, n);
-					this._fread(f, 4);
-				} else if (type.equals("tRNS")) { 
-					// Read transparency info
-					byte[] t = this._freadb(f, n);
-					if (ct == 0) {
-						trns = new byte[] { t[1] };
-					} else if (ct == 2) {
-						trns = new byte[] { t[1], t[3], t[5] };
-					} else {
-						int pos = new String(t).indexOf(0);
-						if (pos != -1) {
-							trns = new byte[] { (byte) pos };
-						}
-					}
-					this._fread(f, 4);
-				} else if (type.equals("IDAT")) { 
-					// Read image data block
-					data = this._freadb(f, n, data);
-					this._fread(f, 4);
-				} else if (type.equals("IEND")) { 
-					break;
-				} else {
-					this._fread(f, n + 4);
-				}
-			} while (f.available() > 0);
-			if (colspace.equals("Indexed") && (pal == null)) { 
+            label:
+            do {
+                int n = this._freadint(f);
+                String type = new String(this._fread(f, 4));
+                switch (type) {
+                    case "PLTE":
+                        // Read palette
+                        pal = this._freadb(f, n);
+                        this._fread(f, 4);
+                        break;
+                    case "tRNS":
+                        // Read transparency info
+                        byte[] t = this._freadb(f, n);
+                        if (ct == 0) {
+                            trns = new byte[]{t[1]};
+                        } else if (ct == 2) {
+                            trns = new byte[]{t[1], t[3], t[5]};
+                        } else {
+                            int pos = new String(t).indexOf(0);
+                            if (pos != -1) {
+                                trns = new byte[]{(byte) pos};
+                            }
+                        }
+                        this._fread(f, 4);
+                        break;
+                    case "IDAT":
+                        // Read image data block
+                        data = this._freadb(f, n, data);
+                        this._fread(f, 4);
+                        break;
+                    case "IEND":
+                        break label;
+                    default:
+                        this._fread(f, n + 4);
+                        break;
+                }
+            } while (f.available() > 0);
+            if (colspace.equals("Indexed") && (pal == null)) {
 				throw new IOException("Missing palette in " + fileName); 
 			}
 			Map<String, Object> image = new HashMap<>();
@@ -933,8 +940,8 @@ public abstract class FPDF {
                 this._out("<</Type /Font"); //$NON-NLS-1$
                 this._out("/BaseFont /" + name); //$NON-NLS-1$
                 this._out("/Subtype /Type1"); //$NON-NLS-1$
-                if ((name != "Symbol") //$NON-NLS-1$
-                        && (name != "ZapfDingbats")) { //$NON-NLS-1$
+                if ((!name.equals("Symbol")) //$NON-NLS-1$
+                        && (!name.equals("ZapfDingbats"))) { //$NON-NLS-1$
                     this._out("/Encoding /WinAnsiEncoding"); //$NON-NLS-1$
                 }
                 this._out(">>"); //$NON-NLS-1$
@@ -951,9 +958,7 @@ public abstract class FPDF {
 	protected void _putimages() {
           String filter = (this.compress) ? "/Filter /FlateDecode " : ""; 
           // Yikes, this.images: Map<String, Map<String, Object>>
-          Iterator<Entry<String, Map<String, Object>>> it = this.images.entrySet().iterator();
-          while (it.hasNext()) {
-            Map.Entry<String, Map<String, Object>> imageEntry = it.next();
+        for (Entry<String, Map<String, Object>> imageEntry : this.images.entrySet()) {
             Map<String, Object> image = imageEntry.getValue();
             // Have to call _newobj() before other stuff.  this.n gets incremented in here
             this._newobj();
@@ -967,62 +972,62 @@ public abstract class FPDF {
             this._out("/Height " + image.get("h"));
             // 
             if (images.containsKey("alphaMask")) {
-              this._out("/SMask " + image.get("n") + " 0 R");
+                this._out("/SMask " + image.get("n") + " 0 R");
             }
             // 
             if (image.get("cs") == "Indexed") {
-              // This used to be (this.n + 1) instead of just image.get("n").  Not really sure if this will cause problems
-              // but the old way didn't make much sense to me.  Cross that bridge when we get there I suppose.
-              this._out("/ColorSpace [/Indexed /DeviceRGB " + (((byte[]) image.get("pal")).length / 3 - 1) + " " + image.get("n") + " 0 R]");
+                // This used to be (this.n + 1) instead of just image.get("n").  Not really sure if this will cause problems
+                // but the old way didn't make much sense to me.  Cross that bridge when we get there I suppose.
+                this._out("/ColorSpace [/Indexed /DeviceRGB " + (((byte[]) image.get("pal")).length / 3 - 1) + " " + image.get("n") + " 0 R]");
             } else {
-              this._out("/ColorSpace /" + image.get("cs"));
-              if (image.get("cs") == "DeviceCMYK") {
-                this._out("/Decode [1 0 1 0 1 0 1 0]");
-              }
+                this._out("/ColorSpace /" + image.get("cs"));
+                if (image.get("cs") == "DeviceCMYK") {
+                    this._out("/Decode [1 0 1 0 1 0 1 0]");
+                }
             }
             // 
             this._out("/BitsPerComponent " + image.get("bpc"));
             if (image.get("f") != null) {
-              this._out("/Filter /" + image.get("f"));
+                this._out("/Filter /" + image.get("f"));
             }
             if (image.get("parms") != null) {
-              this._out((String) image.get("parms"));
+                this._out((String) image.get("parms"));
             }
             if (image.get("trns") != null) {
-              byte[] trnsarr = ((byte[]) image.get("trns"));
-              StringBuilder trns = new StringBuilder();
-              trns.append("/Mask [ "); 
-              for (int i = 0; i < trnsarr.length; i++) {
-                trns.append(_stringify(trnsarr));
-              }
-              trns.append(']');
-              this._out(trns.toString());
+                byte[] trnsarr = ((byte[]) image.get("trns"));
+                StringBuilder trns = new StringBuilder();
+                trns.append("/Mask [ ");
+                for (int i = 0; i < trnsarr.length; i++) {
+                    trns.append(_stringify(trnsarr));
+                }
+                trns.append(']');
+                this._out(trns.toString());
             }
             this._out("/Length " + ((byte[]) (image.get("data"))).length + ">>");
             try {
-              this._putstream(new String((byte[]) image.get("data"), "ISO-8859-1"));  
+                this._putstream(new String((byte[]) image.get("data"), "ISO-8859-1"));
             } catch (UnsupportedEncodingException e) {
-              this._putstream(new String((byte[]) image.get("data"))); 
+                this._putstream(new String((byte[]) image.get("data")));
             }
             image.put("data", null);
             this._out("endobj");
             // Palette
             if (image.get("cs") == "Indexed") {
-              this._newobj();
-              byte[] pal = (byte[]) image.get("pal");
-              pal = (this.compress) ? gzcompress(pal) : pal;
-              this._out("<<" + filter + "/Length " + pal.length + ">>");
-              try {
-                this._putstream(new String(pal, "ISO-8859-1"));  
-              } catch (UnsupportedEncodingException e) {
-                this._putstream(new String(pal)); 
-              }
-              this._out("endobj");
+                this._newobj();
+                byte[] pal = (byte[]) image.get("pal");
+                pal = (this.compress) ? gzcompress(pal) : pal;
+                this._out("<<" + filter + "/Length " + pal.length + ">>");
+                try {
+                    this._putstream(new String(pal, "ISO-8859-1"));
+                } catch (UnsupportedEncodingException e) {
+                    this._putstream(new String(pal));
+                }
+                this._out("endobj");
             }
             // Set object back into underlying data structure so any changes are
             // available elsewhere in future processing logic 
             imageEntry.setValue(image);
-          }
+        }
 	}
 
 	private byte[] gzcompress(byte[] pal) {
@@ -1360,7 +1365,9 @@ public abstract class FPDF {
         this.textColor = tc;
         this.colorFlag = cf;
         // Page header
+        this.inHeader = true;
         this.Header();
+        this.inHeader = false;
         // Restore line width
         if (this.lineWidth != lw) {
             this.lineWidth = lw;
@@ -1499,7 +1506,7 @@ public abstract class FPDF {
         final float k = this.k;
         float x;
         float y;
-        if ((this.y + h > this.pageBreakTrigger) && !this.inFooter && this.acceptPageBreak()) {
+        if ((this.y + h > this.pageBreakTrigger) && this.inHeader && !this.inFooter && this.acceptPageBreak()) {
             // Automatic page break
             x = this.x;
             final float ws = this.ws;
@@ -1919,7 +1926,15 @@ public abstract class FPDF {
 			h1 = w * ((Integer) info.get("h")).floatValue() 
 					/ ((Integer) info.get("w")).floatValue(); 
 		}
-		
+		if (coords == null) {
+		    if (this.y+h > this.pageBreakTrigger && !this.inHeader && !this.inFooter && this.acceptPageBreak()){
+		        float x2 = this.x;
+		        this.addPage(this.currentOrientation, this.currentPageFormat);
+		        this.x = x2;
+            }
+            coords = new Coordinate(this.x, this.y);
+		    this.y +=h;
+        }
 		// position the mask off the page so it can't be seen
 		if (isMask) {
 			coords = new Coordinate(
