@@ -44,5 +44,5 @@ public enum Alignment {
     /**
      * Justification / Default.
      */
-    JUSTIFIED;
+    JUSTIFIED
 }
