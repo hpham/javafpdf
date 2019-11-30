@@ -22,8 +22,9 @@ public class PDFTutorial4 extends FPDF {
             // Position at 1.5 cm from bottom
             setY(-15);
             // Arial italic 8
-            final Set<FontStyle> set = new HashSet<FontStyle>();
-            set.add(FontStyle.ITALIC);
+            final Set<FontStyle> set = new HashSet<FontStyle>() {{
+                add(FontStyle.ITALIC);
+            }};
             setFont("Arial", set, 8);
             // Text color in gray
             setTextColor(128);
