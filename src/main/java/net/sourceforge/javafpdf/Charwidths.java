@@ -35,6 +35,7 @@ import java.util.Properties;
  * @since 4 Mar 2008
  */
 class Charwidths {
+
     private final Properties props;
 
     /**

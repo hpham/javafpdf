@@ -22,14 +22,15 @@
 package net.sourceforge.javafpdf;
 
 /**
- * Borders object. Tells FPDF which borders to draw.<br>
- * TODO: use LineStyle to define the styling of each border.
+ * Borders object. Tells FPDF which borders to draw.<br> TODO: use LineStyle to define the styling
+ * of each border.
  *
  * @author Alan Plum
  * @version $Rev: 8 $
  * @since 5 Mar 2008
  */
 public class Borders {
+
     private final boolean left;
 
     private final boolean top;
@@ -46,7 +47,8 @@ public class Borders {
      * @param right  whether to draw the right border
      * @param bottom whether to draw the bottom border
      */
-    public Borders(final boolean left, final boolean top, final boolean right, final boolean bottom) {
+    public Borders(final boolean left, final boolean top, final boolean right,
+            final boolean bottom) {
         this.left = left;
         this.top = top;
         this.right = right;
@@ -122,6 +124,7 @@ public class Borders {
 
 
     public static class BordersBuilder {
+
         private boolean left;
 
         private boolean top;

@@ -8,6 +8,7 @@ package net.sourceforge.javafpdf;
  * @since 4 Mar 2008
  */
 class Font {
+
     /**
      * Font types.
      *
@@ -71,7 +72,8 @@ class Font {
      * @param ut   the underline thickness
      * @param cw   the character widths
      */
-    public Font(final int i, final Font.Type type, final String name, final int up, final int ut, final Charwidths cw) {
+    public Font(final int i, final Font.Type type, final String name, final int up, final int ut,
+            final Charwidths cw) {
         this.i = i;
         this.n = 0;
         this.type = type;

@@ -8,6 +8,7 @@ package net.sourceforge.javafpdf;
  * @since 4 Mar 2008
  */
 public class Format {
+
     protected static final float mm = FPDF.MM;
 
     /**

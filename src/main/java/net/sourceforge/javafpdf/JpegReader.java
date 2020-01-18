@@ -1,4 +1,3 @@
-
 package net.sourceforge.javafpdf;
 
 import java.awt.color.ColorSpace;
@@ -26,8 +25,7 @@ import org.apache.sanselan.formats.jpeg.JpegImageParser;
 import org.apache.sanselan.formats.jpeg.segments.UnknownSegment;
 
 /**
- * All thanks go to Codo @ Stack Overflow for this gem
- * http://stackoverflow.com/questions/3123574/how-to-convert-from-cmyk-to-rgb-in-java-correctly
+ * All thanks go to Codo @ Stack Overflow for this gem http://stackoverflow.com/questions/3123574/how-to-convert-from-cmyk-to-rgb-in-java-correctly
  * Can't believe this isn't built in to the ImageIO class ...
  */
 public class JpegReader {
@@ -57,10 +55,12 @@ public class JpegReader {
                 checkAdobeMarker(bytes);
                 profile = Sanselan.getICCProfile(bytes);
                 WritableRaster raster = (WritableRaster) reader.readRaster(0, null);
-                if (colorType == COLOR_TYPE_YCCK)
+                if (colorType == COLOR_TYPE_YCCK) {
                     convertYcckToCmyk(raster);
-                if (hasAdobeMarker)
+                }
+                if (hasAdobeMarker) {
                     convertInvertedColors(raster);
+                }
                 image = convertCmykToRgb(raster, profile);
             }
 
@@ -69,7 +69,7 @@ public class JpegReader {
 
         return null;
     }
-    
+
     public BufferedImage readImage(File file) throws IOException, ImageReadException {
         colorType = COLOR_TYPE_RGB;
         hasAdobeMarker = false;
@@ -88,10 +88,12 @@ public class JpegReader {
                 checkAdobeMarker(file);
                 profile = Sanselan.getICCProfile(file);
                 WritableRaster raster = (WritableRaster) reader.readRaster(0, null);
-                if (colorType == COLOR_TYPE_YCCK)
+                if (colorType == COLOR_TYPE_YCCK) {
                     convertYcckToCmyk(raster);
-                if (hasAdobeMarker)
+                }
+                if (hasAdobeMarker) {
                     convertInvertedColors(raster);
+                }
                 image = convertCmykToRgb(raster, profile);
             }
 
@@ -100,55 +102,59 @@ public class JpegReader {
 
         return null;
     }
-    
+
     /**
      * Check Adobe markers in File
+     *
      * @param file
      * @throws IOException
-     * @throws ImageReadException 
+     * @throws ImageReadException
      */
     public void checkAdobeMarker(File file) throws IOException, ImageReadException {
         JpegImageParser parser = new JpegImageParser();
         ByteSource byteSource = new ByteSourceFile(file);
         @SuppressWarnings("rawtypes")
-        ArrayList segments = parser.readSegments(byteSource, new int[] { 0xffee }, true);
+        ArrayList segments = parser.readSegments(byteSource, new int[]{0xffee}, true);
         if (segments != null && segments.size() >= 1) {
             UnknownSegment app14Segment = (UnknownSegment) segments.get(0);
             byte[] data = app14Segment.bytes;
-            if (data.length >= 12 && data[0] == 'A' && data[1] == 'd' && data[2] == 'o' && data[3] == 'b' && data[4] == 'e')
-            {
+            if (data.length >= 12 && data[0] == 'A' && data[1] == 'd' && data[2] == 'o'
+                    && data[3] == 'b' && data[4] == 'e') {
                 hasAdobeMarker = true;
                 int transform = app14Segment.bytes[11] & 0xff;
-                if (transform == 2)
+                if (transform == 2) {
                     colorType = COLOR_TYPE_YCCK;
+                }
             }
         }
     }
-    
+
     /**
      * Check Adobe markers in byte array
+     *
      * @param bytes
      * @throws IOException
-     * @throws ImageReadException 
+     * @throws ImageReadException
      */
     public void checkAdobeMarker(byte[] bytes) throws IOException, ImageReadException {
         JpegImageParser parser = new JpegImageParser();
         ByteSource byteSource = new ByteSourceArray(bytes);
         @SuppressWarnings("rawtypes")
-        ArrayList segments = parser.readSegments(byteSource, new int[] { 0xffee }, true);
+        ArrayList segments = parser.readSegments(byteSource, new int[]{0xffee}, true);
         if (segments != null && segments.size() >= 1) {
             UnknownSegment app14Segment = (UnknownSegment) segments.get(0);
             byte[] data = app14Segment.bytes;
-            if (data.length >= 12 && data[0] == 'A' && data[1] == 'd' && data[2] == 'o' && data[3] == 'b' && data[4] == 'e')
-            {
+            if (data.length >= 12 && data[0] == 'A' && data[1] == 'd' && data[2] == 'o'
+                    && data[3] == 'b' && data[4] == 'e') {
                 hasAdobeMarker = true;
                 int transform = app14Segment.bytes[11] & 0xff;
-                if (transform == 2)
+                if (transform == 2) {
                     colorType = COLOR_TYPE_YCCK;
+                }
             }
         }
     }
-    
+
     public static void convertYcckToCmyk(WritableRaster raster) {
         int height = raster.getHeight();
         int width = raster.getWidth();
@@ -166,9 +172,21 @@ public class JpegReader {
                 int m = (int) (y - 0.34414 * cb - 0.71414 * cr + 135.95984);
                 y = (int) (y + 1.772 * cb - 226.316);
 
-                if (c < 0) c = 0; else if (c > 255) c = 255;
-                if (m < 0) m = 0; else if (m > 255) m = 255;
-                if (y < 0) y = 0; else if (y > 255) y = 255;
+                if (c < 0) {
+                    c = 0;
+                } else if (c > 255) {
+                    c = 255;
+                }
+                if (m < 0) {
+                    m = 0;
+                } else if (m > 255) {
+                    m = 255;
+                }
+                if (y < 0) {
+                    y = 0;
+                } else if (y > 255) {
+                    y = 255;
+                }
 
                 pixelRow[x] = 255 - c;
                 pixelRow[x + 1] = 255 - m;
@@ -186,39 +204,45 @@ public class JpegReader {
         int[] pixelRow = new int[stride];
         for (int h = 0; h < height; h++) {
             raster.getPixels(0, h, width, 1, pixelRow);
-            for (int x = 0; x < stride; x++)
+            for (int x = 0; x < stride; x++) {
                 pixelRow[x] = 255 - pixelRow[x];
+            }
             raster.setPixels(0, h, width, 1, pixelRow);
         }
     }
 
-    public static BufferedImage convertCmykToRgb(Raster cmykRaster, ICC_Profile cmykProfile) throws IOException {
-        if (cmykProfile == null)
-            cmykProfile = ICC_Profile.getInstance(JpegReader.class.getResourceAsStream("/ISOcoated_v2_300_eci.icc"));
+    public static BufferedImage convertCmykToRgb(Raster cmykRaster, ICC_Profile cmykProfile)
+            throws IOException {
+        if (cmykProfile == null) {
+            cmykProfile = ICC_Profile
+                    .getInstance(JpegReader.class.getResourceAsStream("/ISOcoated_v2_300_eci.icc"));
+        }
 
         if (cmykProfile.getProfileClass() != ICC_Profile.CLASS_DISPLAY) {
             byte[] profileData = cmykProfile.getData();
 
             if (profileData[ICC_Profile.icHdrRenderingIntent] == ICC_Profile.icPerceptual) {
-                intToBigEndian(ICC_Profile.icSigDisplayClass, profileData, ICC_Profile.icHdrDeviceClass); // Header is first
+                intToBigEndian(ICC_Profile.icSigDisplayClass, profileData,
+                        ICC_Profile.icHdrDeviceClass); // Header is first
 
                 cmykProfile = ICC_Profile.getInstance(profileData);
             }
         }
 
         ICC_ColorSpace cmykCS = new ICC_ColorSpace(cmykProfile);
-        BufferedImage rgbImage = new BufferedImage(cmykRaster.getWidth(), cmykRaster.getHeight(), BufferedImage.TYPE_INT_RGB);
+        BufferedImage rgbImage = new BufferedImage(cmykRaster.getWidth(), cmykRaster.getHeight(),
+                BufferedImage.TYPE_INT_RGB);
         WritableRaster rgbRaster = rgbImage.getRaster();
         ColorSpace rgbCS = rgbImage.getColorModel().getColorSpace();
         ColorConvertOp cmykToRgb = new ColorConvertOp(cmykCS, rgbCS, null);
         cmykToRgb.filter(cmykRaster, rgbRaster);
         return rgbImage;
     }
-    
+
     static void intToBigEndian(int value, byte[] array, int index) {
-      array[index]   = (byte) (value >> 24);
-      array[index+1] = (byte) (value >> 16);
-      array[index+2] = (byte) (value >>  8);
-      array[index+3] = (byte) (value);
+        array[index] = (byte) (value >> 24);
+        array[index + 1] = (byte) (value >> 16);
+        array[index + 2] = (byte) (value >> 8);
+        array[index + 3] = (byte) (value);
     }
 }
