@@ -88,4 +88,5 @@ buildNumber.properties
 hs_err_pid*
 
 .idea
+*.iml
 # End of https://www.gitignore.io/api/eclipse,maven,java
